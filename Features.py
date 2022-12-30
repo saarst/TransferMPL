@@ -275,48 +275,49 @@ def initialize_model(model_name, feature_extract, use_pretrained=True):
 DATASET_GETTERS = {'cifar10': get_cifar10,
                    'cifar100': get_cifar100}
 
+def features():
 
-file2 = open(r'./d.pkl', 'rb')
-args = pickle.load(file2)
-file2.close()
-args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-args.amp = True if torch.cuda.is_available() else False
-args.label_smoothing = 0
-args.workers = 0
-args.resize = 224
-print(f'pytorch: {torch.__version__}, torchvision: {torchvision.__version__}')
+    file2 = open(r'./d.pkl', 'rb')
+    args = pickle.load(file2)
+    file2.close()
+    args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    args.amp = True if torch.cuda.is_available() else False
+    args.label_smoothing = 0
+    args.workers = 0
+    args.resize = 224
+    print(f'pytorch: {torch.__version__}, torchvision: {torchvision.__version__}')
 
-feature_extract = True
-model_name = "vgg"
-model_ft, input_size = initialize_model(model_name, feature_extract, use_pretrained=True)
-model_ft = model_ft.to(args.device)
+    feature_extract = True
+    model_name = "vgg"
+    model_ft, input_size = initialize_model(model_name, feature_extract, use_pretrained=True)
+    model_ft = model_ft.to(args.device)
 
-labeled_dataset, unlabeled_dataset, test_dataset = DATASET_GETTERS[args.dataset](args, model_ft)
-print(model_ft)
-
-
-os.makedirs('./content/labeled_dataset', exist_ok=True)
-os.makedirs('./content/unlabeled_dataset', exist_ok=True)
-os.makedirs('./content/test_dataset', exist_ok=True)
-
-os.makedirs('./content/unlabeled_dataset/weak_aug', exist_ok=True)
-os.makedirs('./content/unlabeled_dataset/strong_aug', exist_ok=True)
-os.makedirs('./content/unlabeled_dataset/target', exist_ok=True)
+    labeled_dataset, unlabeled_dataset, test_dataset = DATASET_GETTERS[args.dataset](args, model_ft)
+    print(model_ft)
 
 
-os.makedirs('./content/labeled_dataset/img', exist_ok=True)
-os.makedirs('./content/labeled_dataset/target', exist_ok=True)
+    os.makedirs('./content/labeled_dataset', exist_ok=True)
+    os.makedirs('./content/unlabeled_dataset', exist_ok=True)
+    os.makedirs('./content/test_dataset', exist_ok=True)
 
-os.makedirs('./content/test_dataset/img', exist_ok=True)
-os.makedirs('./content/test_dataset/target', exist_ok=True)
+    os.makedirs('./content/unlabeled_dataset/weak_aug', exist_ok=True)
+    os.makedirs('./content/unlabeled_dataset/strong_aug', exist_ok=True)
+    os.makedirs('./content/unlabeled_dataset/target', exist_ok=True)
 
 
-for i, data in tqdm(enumerate(unlabeled_dataset), total=len(unlabeled_dataset)):
-    torch.save(data[0][0], './content/unlabeled_dataset/weak_aug/unlabeled_weakAug_img{}'.format(i))
-    torch.save(data[0][0], './content/unlabeled_dataset/strong_aug/unlabeled_strongAug_img{}'.format(i))
-    torch.save(data[1], './content/unlabeled_dataset/target/unlabeled_target{}'.format(i))
+    os.makedirs('./content/labeled_dataset/img', exist_ok=True)
+    os.makedirs('./content/labeled_dataset/target', exist_ok=True)
 
-print("Finish")
+    os.makedirs('./content/test_dataset/img', exist_ok=True)
+    os.makedirs('./content/test_dataset/target', exist_ok=True)
+
+
+    for i, data in tqdm(enumerate(unlabeled_dataset), total=len(unlabeled_dataset)):
+        torch.save(data[0][0], './content/unlabeled_dataset/weak_aug/unlabeled_weakAug_img{}'.format(i))
+        torch.save(data[0][0], './content/unlabeled_dataset/strong_aug/unlabeled_strongAug_img{}'.format(i))
+        torch.save(data[1], './content/unlabeled_dataset/target/unlabeled_target{}'.format(i))
+
+    print("Finish")
 
 
 

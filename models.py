@@ -198,6 +198,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft = models.vgg16(weights=weights)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
+        print(num_ftrs)
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
@@ -208,7 +209,19 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft = models.efficientnet_v2_s(weights=weights)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[1].in_features
+        print(num_ftrs)
         model_ft.classifier[1] = nn.Linear(num_ftrs, num_classes)
+        input_size = 224
+
+    if model_name == "MobileNet":
+        """ MobileNet
+        """
+        # new method from torchvision >= 0.13
+        model_ft = models.mobilenet_v3_small(weights=weights)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        num_ftrs = model_ft.classifier[3].in_features
+        print(num_ftrs)
+        model_ft.classifier[3] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
     else:

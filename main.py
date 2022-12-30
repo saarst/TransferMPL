@@ -41,7 +41,7 @@ parser.add_argument('--start-step', default=0, type=int,
 parser.add_argument('--workers', default=4, type=int, help='number of workers')
 parser.add_argument('--num-classes', default=10, type=int, help='number of classes')
 parser.add_argument('--resize', default=32, type=int, help='resize image')
-parser.add_argument('--batch-size', default=64, type=int, help='train batch size')
+parser.add_argument('--batch_size', default=64, type=int, help='train batch size')
 parser.add_argument('--teacher-dropout', default=0, type=float, help='dropout on last dense layer')
 parser.add_argument('--student-dropout', default=0, type=float, help='dropout on last dense layer')
 parser.add_argument('--teacher_lr', default=0.01, type=float, help='train learning late')
@@ -50,7 +50,7 @@ parser.add_argument('--momentum', default=0.9, type=float, help='SGD Momentum')
 parser.add_argument('--nesterov', action='store_true', help='use nesterov')
 parser.add_argument('--weight-decay', default=0, type=float, help='train weight decay')
 parser.add_argument('--ema', default=0, type=float, help='EMA decay rate')
-parser.add_argument('--warmup-steps', default=0, type=int, help='warmup steps')
+parser.add_argument('--warmup_steps', default=0, type=int, help='warmup steps')
 parser.add_argument('--student-wait-steps', default=0, type=int, help='warmup steps')
 parser.add_argument('--grad-clip', default=0., type=float, help='gradient norm clipping')
 parser.add_argument('--resume', default='', type=str, help='path to checkpoint')
@@ -58,7 +58,7 @@ parser.add_argument('--evaluate', action='store_true', help='only evaluate model
 parser.add_argument('--finetune', action='store_true',
                     help='only finetune model on labeled dataset')
 parser.add_argument('--finetune-epochs', default=125, type=int, help='finetune epochs')
-parser.add_argument('--finetune-batch-size', default=512, type=int, help='finetune batch size')
+parser.add_argument('--finetune-batch_size', default=512, type=int, help='finetune batch size')
 parser.add_argument('--finetune-lr', default=1e-5, type=float, help='finetune learning late')
 parser.add_argument('--finetune-weight-decay', default=0, type=float, help='finetune weight decay')
 parser.add_argument('--finetune-momentum', default=0, type=float, help='finetune SGD Momentum')
@@ -445,9 +445,12 @@ def main():
     args.amp = True if torch.cuda.is_available() else False
     args.label_smoothing = 0
     args.workers = 2 if torch.cuda.is_available() else 0
-    args.total_steps = 200
-    args.eval_step = 10
-    args.student_wait_steps = 100
+    args.total_steps = 30000
+    args.eval_step = 100
+    args.student_wait_steps = 300
+    args.batch_size = 128
+    args.uda_steps = 500
+    args.warmup_steps = 500
     print(f'pytorch: {torch.__version__}, torchvision: {torchvision.__version__}')
 
 
@@ -518,7 +521,7 @@ def main():
     #                            dropout=0,
     #                            dense_dropout=args.student_dropout)
 
-    model_name = "Efficient"
+    model_name = "MobileNet"
     feature_extract = True
     teacher_model, input_size = initialize_model(model_name, 10, feature_extract, use_pretrained=True)
     student_model, input_size = initialize_model(model_name, 10, feature_extract, use_pretrained=True)
@@ -537,30 +540,52 @@ def main():
 
     criterion = create_loss_fn(args)
 
-    no_decay = ['bn']
-    teacher_parameters = [
-        {'params': [p for n, p in teacher_model.named_parameters() if not any(
-            nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
-        {'params': [p for n, p in teacher_model.named_parameters() if any(
-            nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
-    student_parameters = [
-        {'params': [p for n, p in student_model.named_parameters() if not any(
-            nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
-        {'params': [p for n, p in student_model.named_parameters() if any(
-            nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
+    # no_decay = ['bn']
+    # teacher_parameters = [
+    #     {'params': [p for n, p in teacher_model.named_parameters() if not any(
+    #         nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
+    #     {'params': [p for n, p in teacher_model.named_parameters() if any(
+    #         nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    # ]
+    # student_parameters = [
+    #     {'params': [p for n, p in student_model.named_parameters() if not any(
+    #         nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
+    #     {'params': [p for n, p in student_model.named_parameters() if any(
+    #         nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    # ]
 
-    t_optimizer = optim.SGD(teacher_parameters,
-                            lr=args.teacher_lr,
-                            momentum=args.momentum,
-                            # weight_decay=args.weight_decay,
-                            nesterov=args.nesterov)
-    s_optimizer = optim.SGD(student_parameters,
-                            lr=args.student_lr,
-                            momentum=args.momentum,
-                            # weight_decay=args.weight_decay,
-                            nesterov=args.nesterov)
+    teacher_parameters = teacher_model.parameters()
+    print("Teacher Params to learn:")
+    teacher_parameters = []
+    for name, param in teacher_model.named_parameters():
+        if param.requires_grad == True:
+            teacher_parameters.append(param)
+            print("\t", name)
+
+    student_parameters = student_model.parameters()
+    print("Student Params to learn:")
+    student_parameters = []
+    for name, param in student_model.named_parameters():
+        if param.requires_grad == True:
+            student_parameters.append(param)
+            print("\t", name)
+
+
+
+    # t_optimizer = optim.SGD(teacher_parameters,
+    #                         lr=args.teacher_lr,
+    #                         momentum=args.momentum,
+    #                         # weight_decay=args.weight_decay,
+    #                         nesterov=args.nesterov)
+    # s_optimizer = optim.SGD(student_parameters,
+    #                         lr=args.student_lr,
+    #                         momentum=args.momentum,
+    #                         # weight_decay=args.weight_decay,
+    #                         nesterov=args.nesterov)
+
+    t_optimizer = optim.Adam(teacher_parameters, lr=args.teacher_lr)
+    s_optimizer = optim.Adam(student_parameters, lr=args.student_lr)
+
 
     t_scheduler = get_cosine_schedule_with_warmup(t_optimizer,
                                                   args.warmup_steps,

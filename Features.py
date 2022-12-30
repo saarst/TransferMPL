@@ -172,8 +172,10 @@ class TransformMPL(object):
     def __call__(self, x):
         ori = self.normalize(self.ori(x))
         aug = self.normalize(self.aug(x))
-        ori_features = self.model(ori.unsqueeze(0).to(device))
-        aug_features = self.model(aug.unsqueeze(0).to(device))
+        self.model.eval()
+        with torch.no_grad():
+            ori_features = self.model(ori.unsqueeze(0).to(device))
+            aug_features = self.model(aug.unsqueeze(0).to(device))
         return ori_features, aug_features
 
 

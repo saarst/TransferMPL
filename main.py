@@ -444,7 +444,7 @@ def main():
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     args.amp = True if torch.cuda.is_available() else False
     args.label_smoothing = 0
-    args.workers = args.workers if torch.cuda.is_available() else False
+    args.workers = 2 if torch.cuda.is_available() else False
     args.total_steps = 10000
     print(f'pytorch: {torch.__version__}, torchvision: {torchvision.__version__}')
 

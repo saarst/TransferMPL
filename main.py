@@ -516,7 +516,7 @@ def main():
     #                            dropout=0,
     #                            dense_dropout=args.student_dropout)
 
-    model_name = "vgg"
+    model_name = "Efficient"
     feature_extract = True
     teacher_model, input_size = initialize_model(model_name,10, feature_extract, use_pretrained=True)
     student_model, input_size = initialize_model(model_name,10, feature_extract, use_pretrained=True)

@@ -19,6 +19,7 @@ from torchvision import transforms, models
 
 from augmentation import RandAugment
 
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
 logger = logging.getLogger(__name__)
 
 cifar10_mean = (0.4914, 0.4822, 0.4465)
@@ -171,8 +172,8 @@ class TransformMPL(object):
     def __call__(self, x):
         ori = self.normalize(self.ori(x))
         aug = self.normalize(self.aug(x))
-        ori_features = self.model(ori.unsqueeze(0))
-        aug_features = self.model(aug.unsqueeze(0))
+        ori_features = self.model(ori.unsqueeze(0).to(device))
+        aug_features = self.model(aug.unsqueeze(0).to(device))
         return ori_features, aug_features
 
 

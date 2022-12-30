@@ -585,8 +585,8 @@ def main():
     #                         # weight_decay=args.weight_decay,
     #                         nesterov=args.nesterov)
 
-    t_optimizer = optim.Adam(teacher_parameters, lr=args.teacher_lr)
-    s_optimizer = optim.Adam(student_parameters, lr=args.student_lr)
+    t_optimizer = optim.Adam(teacher_parameters)
+    s_optimizer = optim.Adam(student_parameters)
 
 
     t_scheduler = get_cosine_schedule_with_warmup(t_optimizer,

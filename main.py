@@ -444,7 +444,7 @@ def main():
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     args.amp = True if torch.cuda.is_available() else False
     args.label_smoothing = 0
-    args.workers = 2 if torch.cuda.is_available() else 0
+    args.workers = 4 if torch.cuda.is_available() else 0
     args.total_steps = 30000
     args.eval_step = 100
     args.student_wait_steps = 300

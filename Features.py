@@ -283,7 +283,7 @@ def features():
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     args.amp = True if torch.cuda.is_available() else False
     args.label_smoothing = 0
-    args.workers = 0
+    args.workers = 4 if torch.cuda.is_available() else 0
     args.resize = 224
     print(f'pytorch: {torch.__version__}, torchvision: {torchvision.__version__}')
 

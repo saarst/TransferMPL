@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from data import DATASET_GETTERS
-from models import WideResNet, ModelEMA, CifarCNN
+from models import WideResNet, ModelEMA, initialize_model
 from utils import (AverageMeter, accuracy, create_loss_fn,
                    save_checkpoint, reduce_tensor, model_load_state_dict)
 
@@ -444,8 +444,9 @@ def main():
     args.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     args.amp = True if torch.cuda.is_available() else False
     args.label_smoothing = 0
-    args.workers = 0
-    print(f'pytorch: {torch.__version__}, torchtext: {torchvision.__version__}')
+    args.workers = args.workers if torch.cuda.is_available() else False
+    args.total_steps = 10000
+    print(f'pytorch: {torch.__version__}, torchvision: {torchvision.__version__}')
 
 
 
@@ -504,19 +505,21 @@ def main():
     if args.local_rank not in [-1, 0]:
         torch.distributed.barrier()
 
-    teacher_model = WideResNet(num_classes=args.num_classes,
-                               depth=depth,
-                               widen_factor=widen_factor,
-                               dropout=0,
-                               dense_dropout=args.teacher_dropout)
-    student_model = WideResNet(num_classes=args.num_classes,
-                               depth=depth,
-                               widen_factor=widen_factor,
-                               dropout=0,
-                               dense_dropout=args.student_dropout)
+    # teacher_model = WideResNet(num_classes=args.num_classes,
+    #                            depth=depth,
+    #                            widen_factor=widen_factor,
+    #                            dropout=0,
+    #                            dense_dropout=args.teacher_dropout)
+    # student_model = WideResNet(num_classes=args.num_classes,
+    #                            depth=depth,
+    #                            widen_factor=widen_factor,
+    #                            dropout=0,
+    #                            dense_dropout=args.student_dropout)
 
-    #teacher_model = CifarCNN()
-    #student_model = CifarCNN()
+    model_name = "vgg"
+    feature_extract = True
+    teacher_model, input_size = initialize_model(model_name,10, feature_extract, use_pretrained=True)
+    student_model, input_size = initialize_model(model_name,10, feature_extract, use_pretrained=True)
 
     if args.local_rank == 0:
         torch.distributed.barrier()

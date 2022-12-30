@@ -21,6 +21,7 @@ normal_std = (0.5, 0.5, 0.5)
 def get_cifar10(args):
     transform_labeled = transforms.Compose([
         transforms.RandomHorizontalFlip(),
+        transforms.Resize(224),
         transforms.RandomCrop(size=args.resize,
                               padding=int(args.resize*0.125),
                               padding_mode='reflect'),
@@ -141,11 +142,13 @@ class TransformMPL(object):
 
         self.ori = transforms.Compose([
             transforms.RandomHorizontalFlip(),
+            transforms.Resize(224),
             transforms.RandomCrop(size=args.resize,
                                   padding=int(args.resize*0.125),
                                   padding_mode='reflect')])
         self.aug = transforms.Compose([
             transforms.RandomHorizontalFlip(),
+            transforms.Resize(224),
             transforms.RandomCrop(size=args.resize,
                                   padding=int(args.resize*0.125),
                                   padding_mode='reflect'),

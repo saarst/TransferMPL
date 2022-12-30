@@ -445,12 +445,14 @@ def main():
     args.amp = True if torch.cuda.is_available() else False
     args.label_smoothing = 0
     args.workers = 4 if torch.cuda.is_available() else 0
-    args.total_steps = 30000
-    args.eval_step = 100
-    args.student_wait_steps = 300
+    args.total_steps = 8000
+    args.eval_step = 500
+    args.student_wait_steps = 80
     args.batch_size = 128
-    args.uda_steps = 500
-    args.warmup_steps = 500
+    args.uda_steps = 135
+    args.warmup_steps = 135
+    args.finetune_epochs = 4
+
     print(f'pytorch: {torch.__version__}, torchvision: {torchvision.__version__}')
 
 

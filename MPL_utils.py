@@ -167,8 +167,8 @@ def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        for phase in ['train', 'val']:
-            if phase == 'train':
+        for phase in ['labeled', 'val']:
+            if phase == 'labeled':
                 model.train()  # Set model to training mode
             else:
                 model.eval()   # Set model to evaluate mode
@@ -183,7 +183,7 @@ def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs
 
                 # forward
                 # track history if only in train
-                with torch.set_grad_enabled(phase == 'train'):
+                with torch.set_grad_enabled(phase == 'labeled'):
                     # Get model outputs and calculate loss
                     outputs = model(inputs)
                     loss = criterion(outputs, labels)
@@ -191,7 +191,7 @@ def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs
                     _, preds = torch.max(outputs, 1)
 
                     # backward + optimize only if in training phase
-                    if phase == 'train':
+                    if phase == 'labeled':
                         # zero the parameter gradients
                         optimizer.zero_grad()
                         loss.backward()

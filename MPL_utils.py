@@ -327,7 +327,7 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                             with torch.no_grad():
                                 s_logits_l = s_model(inputs_l)
                             s_loss_l_new = F.cross_entropy(s_logits_l.detach(), labels.long())
-                            s_diff = s_loss_l_old - s_loss_l_new
+                            s_diff = torch.abs(s_loss_l_old - s_loss_l_new)
                             _, hard_pseudo_label_on_s = torch.max(t_logits_us.detach(), dim=-1)
                             t_loss_mpl = s_diff * F.cross_entropy(t_logits_us, hard_pseudo_label_on_s.long())
                             t_loss = t_loss_uda + t_loss_mpl

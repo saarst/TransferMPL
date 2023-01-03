@@ -241,3 +241,131 @@ def x_u_split(args, labels):
     assert len(labeled_idx) == args.num_labeled
     np.random.shuffle(labeled_idx)
     return labeled_idx, unlabeled_idx
+
+def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_optimizer):
+    since = time.time()
+
+    val_acc_history = []
+
+    best_model_wts = copy.deepcopy(t_model.state_dict())
+    best_acc = 0.0
+    unlabeled_iter = iter(dataloaders['unlabeled'])
+    step = -1
+    for epoch in range(args.num_epochs):    # this is epochs w.r.t the labeled dataset
+        print('Epoch {}/{}'.format(epoch, args.num_epochs - 1))
+        print('-' * 10)
+
+        # Each epoch has a training and validation phase
+        for phase in ['train', 'val']:
+
+            if phase == 'train':
+                dataset_to_iter = 'labeled'  # in the train phase, the epochs are of the labeled set
+                t_model.train()  # Set model to training mode
+                s_model.train()
+            else:
+                dataset_to_iter = 'val'
+                t_model.eval()   # Set model to evaluate mode
+
+
+            running_loss = 0.0
+            running_corrects = 0
+
+            # Iterate over data.
+            for inputs_l, labels in dataloaders[dataset_to_iter]:
+                inputs_l = inputs_l.to(device)
+                labels = labels.to(device)
+
+                if phase == 'train':
+                    step = step + 1
+                    inputs_u, _ = next(unlabeled_iter)
+                    inputs_u = inputs_u.to(device)
+                    inputs_uw = inputs_u    # inputs_uw = aug_list_weak(inputs_u)   - kornia
+                    inputs_us = inputs_u    # inputs_us = aug_list_strong(inputs_u) - kornia
+
+
+
+                # forward
+                # track history if only in train
+                with torch.set_grad_enabled(phase == 'train'):
+                    # Get model outputs and calculate loss
+                    if phase == 'val':
+                        outputs = t_model(inputs_l)
+                        t_loss = criterion(outputs, labels)
+                        _, preds = torch.max(outputs, 1)
+                    else:
+                        # first teacher part, calc t_loss_labels and t_loss_uda
+                        batch_size = inputs_l.shape[0]
+                        t_inputs = torch.cat((inputs_l, inputs_uw, inputs_us))
+                        t_logits = t_model(t_inputs)
+                        t_logits_l = t_logits[:batch_size]
+                        t_logits_uw, t_logits_us = t_logits[batch_size:].chunk(2)
+                        del t_logits
+                        t_loss_l = criterion(t_logits_l, labels.long())
+                        soft_pseudo_label = torch.softmax(t_logits_uw.detach() / args.temperature, dim=-1)
+                        max_probs, hard_pseudo_label_on_w = torch.max(soft_pseudo_label, dim=-1)
+                        mask = max_probs.ge(args.threshold).float()
+                        t_loss_u = torch.mean(
+                            -(soft_pseudo_label * torch.log_softmax(t_logits_us, dim=-1)).sum(dim=-1) * mask
+                        )
+                        weight_u = args.lambda_u * min(1., (step + 1) / args.uda_steps)
+                        t_loss_uda = t_loss_l + weight_u * t_loss_u
+
+                        if epoch >= args.warmup_epoch_num:
+                            # student part - calc s_loss for student backward step, and s_loss_l_old for later use of teacher
+                            s_inputs = torch.cat((inputs_l, inputs_us))
+                            s_logits = s_model(s_inputs)
+                            s_logits_l = s_logits[:batch_size]
+                            s_logits_us = s_logits[batch_size:]
+                            del s_logits
+                            s_loss_l_old = F.cross_entropy(s_logits_l.detach(), labels.long())
+                            s_loss = criterion(s_logits_us, hard_pseudo_label_on_w.long())
+                            s_optimizer.zero_grad()
+                            s_loss.backward()
+                            s_optimizer.step()
+
+                            # now calc t_loss_mps
+                            with torch.no_grad():
+                                s_logits_l = s_model(inputs_l)
+                            s_loss_l_new = F.cross_entropy(s_logits_l.detach(), labels.long())
+                            s_diff = s_loss_l_old - s_loss_l_new
+                            _, hard_pseudo_label_on_s = torch.max(t_logits_us.detach(), dim=-1)
+                            t_loss_mpl = s_diff * F.cross_entropy(t_logits_us, hard_pseudo_label_on_s.long())
+                            t_loss = t_loss_uda + t_loss_mpl
+
+                        else: # in warmup case, student doesn't learn, so teacher's loss is only from itself
+                            t_loss = t_loss_uda
+
+                        t_optimizer.zero_grad()
+                        t_loss.backward()
+                        t_optimizer.step()
+
+                        with torch.no_grad():
+                            outputs = t_model(inputs_l)
+                        _, preds = torch.max(outputs, 1)
+
+                # statistics
+                running_loss += t_loss.item() * inputs_l.size(0)
+                running_corrects += torch.sum(preds == labels.data)
+
+            epoch_loss = running_loss / len(dataloaders[dataset_to_iter].dataset)
+            epoch_acc = running_corrects.double() / len(dataloaders[dataset_to_iter].dataset)
+
+            print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+
+            # deep copy the model
+            if phase == 'val' and epoch_acc > best_acc:
+                best_acc = epoch_acc
+                best_model_wts = copy.deepcopy(t_model.state_dict())
+            if phase == 'val':
+                val_acc_history.append(epoch_acc)
+
+        print()
+
+    time_elapsed = time.time() - since
+    print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+    print('Best val Acc: {:4f}'.format(best_acc))
+
+    # load best model weights
+    t_model.load_state_dict(best_model_wts)
+    return t_model, val_acc_history
+

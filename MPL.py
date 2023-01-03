@@ -4,20 +4,20 @@ from MPL_utils import *
 
 # Data augmentation and normalization for training
 # Just normalization for validation
-data_transforms = {
-    'unlabeled': transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
-    'val': transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ]),
-}
+# data_transforms = {
+#     'unlabeled': transforms.Compose([
+#         transforms.RandomResizedCrop(224),
+#         transforms.RandomHorizontalFlip(),
+#         transforms.ToTensor(),
+#         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+#     ]),
+#     'val': transforms.Compose([
+#         transforms.Resize(256),
+#         transforms.CenterCrop(224),
+#         transforms.ToTensor(),
+#         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+#     ]),
+# }
 #args:
 
 args.batch_size = 4
@@ -31,15 +31,18 @@ args.feature_extract = True     # Flag for feature extracting. When False, we fi
 args.temperature = 1
 args.threshold = 0
 args.mask = 0
-args.lambda_u = 0
-args.uda_steps = 1
-args.warmup_epoch_num = 0
+args.lambda_u = 0.01
+args.uda_steps = 10
+args.warmup_epoch_num = 1
 
 
+basic_transform = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.ToTensor()])
 
 #code:
 dirs = {'unlabeled': 'train', 'val': 'val'}
-image_datasets = {x: ImageFolder(os.path.join(args.data_dir, dirs[x]), data_transforms[x]) for x in ['unlabeled', 'val']}
+image_datasets = {x: ImageFolder(os.path.join(args.data_dir, dirs[x]), basic_transform) for x in ['unlabeled', 'val']}
 
 args.num_labeled = round(args.num_labels_percent * len(image_datasets['unlabeled']))
 labeled_idx, _ = x_u_split(args, image_datasets['unlabeled'].targets)

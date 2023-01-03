@@ -13,9 +13,12 @@ from torch.utils.data import DataLoader, Dataset, SubsetRandomSampler, Subset, R
 from torchvision.datasets import ImageFolder
 from torchvision import models, transforms
 import torchvision
+from kornia import augmentation as K
+from kornia.augmentation import AugmentationSequential
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+varAntsBees  = [0.229, 0.224, 0.225]
+meanAntsBees = [0.485, 0.456, 0.406]
 def set_parameter_requires_grad(model, feature_extracting=False):
     # approach 1
     if feature_extracting:
@@ -244,7 +247,22 @@ def x_u_split(args, labels):
 
 def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_optimizer):
     since = time.time()
+    aug_weak = AugmentationSequential(
+                                    K.RandomHorizontalFlip(),
+                                    K.Normalize(meanAntsBees,varAntsBees),
 
+                                    same_on_batch=False,
+                                )
+    aug_strong = AugmentationSequential(
+                                    K.RandomHorizontalFlip(),
+                                    K.Normalize(meanAntsBees, varAntsBees),
+                                    K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.1),
+                                    K.RandomAffine((-15., 20.), (0.1, 0.1), (0.7, 1.2), (30., 50.), p=0.1),
+                                    K.RandomPerspective(0.5, p=0.1),
+                                    K.RandomGrayscale(p=0.2),
+                                    K.RandomGaussianNoise(0, 0.1, p=0.2),
+                                    same_on_batch=False,
+                                )
     val_acc_history = []
 
     best_model_wts = copy.deepcopy(t_model.state_dict())
@@ -273,14 +291,15 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
             # Iterate over data.
             for inputs_l, labels in dataloaders[dataset_to_iter]:
                 inputs_l = inputs_l.to(device)
+                inputs_l = aug_weak(inputs_l)
                 labels = labels.to(device)
 
                 if phase == 'train':
                     step = step + 1
                     inputs_u, _ = next(unlabeled_iter)
                     inputs_u = inputs_u.to(device)
-                    inputs_uw = inputs_u    # inputs_uw = aug_list_weak(inputs_u)   - kornia
-                    inputs_us = inputs_u    # inputs_us = aug_list_strong(inputs_u) - kornia
+                    inputs_uw = aug_weak(inputs_u)      # inputs_uw = aug_list_weak(inputs_u)   - kornia
+                    inputs_us = aug_strong(inputs_u)    # inputs_us = aug_list_strong(inputs_u) - kornia
 
 
 

@@ -87,7 +87,7 @@ criterion = nn.CrossEntropyLoss()
 #t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)
 
 s_model, t_model, hist = train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_optimizer)
-
+print("Plotting")
 x = np.arange(1, args.num_epochs + 1)
 s_fig = plt.figure(figsize=(8, 8))
 ax = s_fig.add_subplot(1, 1, 1)

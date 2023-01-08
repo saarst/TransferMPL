@@ -31,8 +31,8 @@ args.feature_extract = True     # Flag for feature extracting. When False, we fi
 args.temperature = 1
 args.threshold = 0
 args.mask = 0
-args.lambda_u = 0.01
-args.uda_steps = 10
+args.lambda_u = 0
+args.uda_steps = 1
 args.warmup_epoch_num = 1
 
 
@@ -46,7 +46,7 @@ image_datasets = {x: ImageFolder(os.path.join(args.data_dir, dirs[x]), basic_tra
 
 args.num_labeled = round(args.num_labels_percent * len(image_datasets['unlabeled']))
 labeled_idx, _ = x_u_split(args, image_datasets['unlabeled'].targets)
-image_datasets['labeled'] = Subset(image_datasets['unlabeled'],labeled_idx)
+image_datasets['labeled'] = Subset(image_datasets['unlabeled'], labeled_idx)
 
 dataloaders = {x: DataLoader(image_datasets[x], batch_size=args.batch_size,
                              shuffle=True, num_workers=args.num_workers) for x in ['unlabeled', 'labeled', 'val']}
@@ -54,15 +54,12 @@ dataset_sizes = {x: len(image_datasets[x]) for x in ['unlabeled', 'labeled', 'va
 class_names = image_datasets['unlabeled'].classes
 
 print(device)
-
-
-
 # Get a batch of training data
-unlabeled_set = dataloaders['unlabeled']
+#unlabeled_set = dataloaders['unlabeled']
 
 # Initialize the model for this run
 t_model, input_size = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
-s_model, input_size = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
+s_model, _ = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
 
 
 # Print the model we just instantiated

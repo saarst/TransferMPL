@@ -250,7 +250,6 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
     aug_weak = AugmentationSequential(
                                     K.RandomHorizontalFlip(),
                                     K.Normalize(meanAntsBees,varAntsBees),
-
                                     same_on_batch=False,
                                 )
     aug_strong = AugmentationSequential(

@@ -31,7 +31,7 @@ args.feature_extract = True     # Flag for feature extracting. When False, we fi
 args.temperature = 1
 args.threshold = 0
 args.mask = 0
-args.lambda_u = 0
+args.lambda_u = 0.5
 args.uda_steps = 1
 args.warmup_epoch_num = 5
 

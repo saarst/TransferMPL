@@ -33,7 +33,7 @@ args.threshold = 0
 args.mask = 0
 args.lambda_u = 0
 args.uda_steps = 1
-args.warmup_epoch_num = 1
+args.warmup_epoch_num = 5
 
 
 basic_transform = transforms.Compose([

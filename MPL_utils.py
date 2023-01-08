@@ -160,7 +160,8 @@ Training function
 def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs=25):
     since = time.time()
 
-    val_acc_history = []
+    s_val_acc_history = []
+
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -262,9 +263,14 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                                     K.RandomGaussianNoise(0, 0.1, p=0.2),
                                     same_on_batch=False,
                                 )
-    val_acc_history = []
+    s_val_acc_history = []
+    s_val_loss_history = []
 
-    best_model_wts = copy.deepcopy(t_model.state_dict())
+    s_train_loss_history = []
+    t_train_loss_history = []
+
+    best_t_model_wts = copy.deepcopy(t_model.state_dict())
+    best_s_model_wts = copy.deepcopy(s_model.state_dict())
     best_acc = 0.0
     unlabeled_iter = iter(dataloaders['unlabeled'])
     step = -1
@@ -281,11 +287,14 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                 s_model.train()
             else:
                 dataset_to_iter = 'val'
-                t_model.eval()   # Set model to evaluate mode
+                s_model.eval()   # Set s_model to evaluate mode
+                t_model.eval()
 
 
-            running_loss = 0.0
-            running_corrects = 0
+            s_running_loss = 0.0
+            t_running_loss = 0.0
+            s_running_corrects = 0.0
+            t_running_corrects = 0.0
 
             # Iterate over data.
             for inputs_l, labels in dataloaders[dataset_to_iter]:
@@ -307,9 +316,13 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                 with torch.set_grad_enabled(phase == 'train'):
                     # Get model outputs and calculate loss
                     if phase == 'val':
+                        outputs = s_model(inputs_l)
+                        s_loss = criterion(outputs, labels)
+                        _, s_preds = torch.max(outputs, 1)
+
                         outputs = t_model(inputs_l)
                         t_loss = criterion(outputs, labels)
-                        _, preds = torch.max(outputs, 1)
+                        _, t_preds = torch.max(outputs, 1)
                     else:
                         # first teacher part, calc t_loss_labels and t_loss_uda
                         batch_size = inputs_l.shape[0]
@@ -344,14 +357,21 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                             # now calc t_loss_mps
                             with torch.no_grad():
                                 s_logits_l = s_model(inputs_l)
+                                _, s_preds = torch.max(s_logits_l, 1)
                             s_loss_l_new = F.cross_entropy(s_logits_l.detach(), labels.long())
-                            s_diff = torch.abs(s_loss_l_old - s_loss_l_new)
+                            s_diff = s_loss_l_old - s_loss_l_new
                             _, hard_pseudo_label_on_s = torch.max(t_logits_us.detach(), dim=-1)
                             t_loss_mpl = s_diff * F.cross_entropy(t_logits_us, hard_pseudo_label_on_s.long())
                             t_loss = t_loss_uda + t_loss_mpl
 
                         else: # in warmup case, student doesn't learn, so teacher's loss is only from itself
                             t_loss = t_loss_uda
+                            with torch.no_grad():
+                                s_outputs = s_model(inputs_l)
+                                s_loss = F.cross_entropy(s_outputs.detach(), labels.long())
+                                _, s_preds = torch.max(s_outputs, 1)
+
+
 
                         t_optimizer.zero_grad()
                         t_loss.backward()
@@ -359,23 +379,39 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
 
                         with torch.no_grad():
                             outputs = t_model(inputs_l)
-                        _, preds = torch.max(outputs, 1)
+                            _, t_preds = torch.max(outputs, 1)
+
 
                 # statistics
-                running_loss += t_loss.item() * inputs_l.size(0)
-                running_corrects += torch.sum(preds == labels.data)
+                s_running_loss += s_loss.item() * inputs_l.size(0)
+                s_running_corrects += torch.sum(s_preds == labels.data)
+                t_running_loss += t_loss.item() * inputs_l.size(0)
+                t_running_corrects += torch.sum(t_preds == labels.data)
 
-            epoch_loss = running_loss / len(dataloaders[dataset_to_iter].dataset)
-            epoch_acc = running_corrects.double() / len(dataloaders[dataset_to_iter].dataset)
+            s_epoch_loss = s_running_loss / len(dataloaders[dataset_to_iter].dataset)
+            s_epoch_acc = s_running_corrects.double() / len(dataloaders[dataset_to_iter].dataset)
+            t_epoch_loss = t_running_loss / len(dataloaders[dataset_to_iter].dataset)
+            t_epoch_acc = t_running_corrects.double() / len(dataloaders[dataset_to_iter].dataset)
 
-            print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+
+            if epoch >= args.warmup_epoch_num or phase=='val':
+                print('{} T_Loss: {:.4f} T_Acc: {:.4f} S_Loss: {:.4f} S_Acc: {:.4f}'.format(phase, t_epoch_loss, t_epoch_acc, s_epoch_loss, s_epoch_acc))
+            else:
+                # warmup
+                print('{} : Warmup. T_Loss: {:.4f} T_Acc: {:.4f} '.format(phase, t_epoch_loss, t_epoch_acc))
 
             # deep copy the model
-            if phase == 'val' and epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model_wts = copy.deepcopy(t_model.state_dict())
+            if phase == 'val' and s_epoch_acc > best_acc:
+                best_acc = s_epoch_acc
+                best_s_model_wts = copy.deepcopy(s_model.state_dict())
+                best_t_model_wts = copy.deepcopy(t_model.state_dict())
             if phase == 'val':
-                val_acc_history.append(epoch_acc)
+                s_val_acc_history.append(s_epoch_acc)
+                s_val_loss_history.append(s_epoch_loss)
+            else:
+                s_train_loss_history.append(s_epoch_loss)
+                t_train_loss_history.append(t_epoch_loss)
+
 
         print()
 
@@ -384,6 +420,7 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
     print('Best val Acc: {:4f}'.format(best_acc))
 
     # load best model weights
-    t_model.load_state_dict(best_model_wts)
-    return t_model, val_acc_history
+    s_model.load_state_dict(best_s_model_wts)
+    t_model.load_state_dict(best_t_model_wts)
+    return s_model, t_model, {"s_val_acc" : s_val_acc_history, "s_val_loss" : s_val_loss_history, "s_train_loss" : s_train_loss_history, "t_train_loss" : t_train_loss_history}
 

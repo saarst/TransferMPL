@@ -25,7 +25,7 @@ args.data_dir = 'datasets/hymenoptera_data'
 args.num_workers = 4 if torch.cuda.is_available() else 0
 args.num_labels_percent = 0.01
 args.num_classes = 2
-args.num_epochs = 15            # Number of epochs to train for
+args.num_epochs = 2           # Number of epochs to train for
 args.model_name = "vgg"         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet]
 args.feature_extract = True     # Flag for feature extracting. When False, we fine-tune the whole model,  when True we only update the reshaped layer params
 args.temperature = 1
@@ -86,6 +86,26 @@ criterion = nn.CrossEntropyLoss()
 # Train and evaluate
 #t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)
 
-t_model, hist = train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_optimizer)
+s_model, t_model, hist = train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_optimizer)
+
+x = np.arange(1, args.num_epochs + 1)
+s_fig = plt.figure(figsize=(8, 8))
+ax = s_fig.add_subplot(1, 1, 1)
+ax.set_xlabel('Epochs')
+ax.set_ylabel('Loss\Acc')
+ax.set_title('Loss - student')
+ax.plot(x, hist['s_val_acc'], x, hist['s_train_loss'])
+ax.legend(["Student Val Accuray", "Student Train Loss"])
+s_fig.tight_layout()
+
+plt.show()
+# fig = plt.figure(figsize=(8, 8))
+# ax = fig.add_subplot(2, 1, 2)
+# ax.set_xlabel('Epochs')
+# ax.set_ylabel('Accuracy')
+# ax.set_title('Accuracy - train and test')
+# ax.plot(x, test_accuracy, x, train_accuracy)
+# ax.legend(["test Accuracy", "train Accuracy"])
+
 
 

@@ -94,7 +94,7 @@ ax = s_fig.add_subplot(1, 1, 1)
 ax.set_xlabel('Epochs')
 ax.set_ylabel('Loss\Acc')
 ax.set_title('Loss - student')
-ax.plot(x, hist['s_val_acc'].cpu(), x, hist['s_train_loss'].cpu())
+ax.plot(x, hist['s_val_acc'], x, hist['s_train_loss'])
 ax.legend(["Student Val Accuray", "Student Train Loss"])
 s_fig.tight_layout()
 

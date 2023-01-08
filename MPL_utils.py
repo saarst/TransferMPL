@@ -389,9 +389,9 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                 t_running_corrects += torch.sum(t_preds == labels.data)
 
             s_epoch_loss = s_running_loss / len(dataloaders[dataset_to_iter].dataset)
-            s_epoch_acc = s_running_corrects.double() / len(dataloaders[dataset_to_iter].dataset)
+            s_epoch_acc = s_running_corrects.double().cpu() / len(dataloaders[dataset_to_iter].dataset)
             t_epoch_loss = t_running_loss / len(dataloaders[dataset_to_iter].dataset)
-            t_epoch_acc = t_running_corrects.double() / len(dataloaders[dataset_to_iter].dataset)
+            t_epoch_acc = t_running_corrects.double().cpu() / len(dataloaders[dataset_to_iter].dataset)
 
 
             if epoch >= args.warmup_epoch_num or phase=='val':

@@ -259,7 +259,7 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                                     K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.1),
                                     K.RandomAffine((-15., 20.), (0.1, 0.1), (0.7, 1.2), (30., 50.), p=0.1),
                                     K.RandomPerspective(0.5, p=0.1),
-                                    K.RandomGrayscale(p=0.2),
+                                    K.RandomGrayscale(p=0.1),
                                     K.RandomGaussianNoise(0, 0.1, p=0.2),
                                     same_on_batch=False,
                                 )

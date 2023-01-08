@@ -25,7 +25,7 @@ args.data_dir = 'datasets/hymenoptera_data'
 args.num_workers = 4 if torch.cuda.is_available() else 0
 args.num_labels_percent = 0.01
 args.num_classes = 2
-args.num_epochs = 15          # Number of epochs to train for
+args.num_epochs = 25         # Number of epochs to train for
 args.model_name = "vgg"         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet]
 args.feature_extract = True     # Flag for feature extracting. When False, we fine-tune the whole model,  when True we only update the reshaped layer params
 args.temperature = 1
@@ -97,6 +97,7 @@ ax.set_title('Loss - student')
 ax.plot(x, hist['s_val_acc'], x, hist['s_train_loss'])
 ax.legend(["Student Val Accuray", "Student Train Loss"])
 s_fig.tight_layout()
+plt.show()
 
 # fig = plt.figure(figsize=(8, 8))
 # ax = fig.add_subplot(2, 1, 2)

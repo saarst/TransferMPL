@@ -475,6 +475,15 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
 
 
 
+def get_next(iter, dataloader):
+    try:
+        inputs_u, _ = next(iter)
+    except StopIteration:
+        print("I catched")
+        iter = iter(dataloader)
+        inputs_u, _ = next(iter)
+    return inputs_u, iter
+
 def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_optimizer):
     since = time.time()
     aug_weak = AugmentationSequential(
@@ -523,12 +532,8 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             inputs_l = inputs_l.to(device)
             inputs_l = aug_weak(inputs_l)
             labels = labels.to(device)
-            try:
-                inputs_u, _ = next(unlabeled_iter)
-            except StopIteration:
-                print("I catched")
-                unlabeled_iter = iter(dataloaders['unlabeled'])
-                inputs_u, _ = next(unlabeled_iter)
+            inputs_u, unlabeled_iter = get_next(unlabeled_iter, dataloaders['unlabeled'])
+
             inputs_u = inputs_u.to(device)
             inputs_uw = aug_weak(inputs_u)    # kornia
             inputs_us = aug_strong(inputs_u)  # kornia

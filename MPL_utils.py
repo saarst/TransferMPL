@@ -514,7 +514,7 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
     best_s_acc = 0.0
     best_t_acc = 0.0
 
-    unlabeled_iter = itertools.cycle(iter(dataloaders['unlabeled']))
+    unlabeled_iter = itertools.cycle(dataloaders['unlabeled'])
     step = -1
     for epoch in range(args.num_epochs):  # this is epochs w.r.t the labeled dataset
         print('Epoch {}/{}'.format(epoch, args.num_epochs - 1))

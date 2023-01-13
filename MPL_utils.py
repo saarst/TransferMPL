@@ -480,7 +480,6 @@ def get_next(iter, dataloader):
     try:
         inputs_u, _ = next(iter)
     except StopIteration:
-        print("I catched")
         iter = iter(dataloader)
         inputs_u, _ = next(iter)
     return inputs_u, iter

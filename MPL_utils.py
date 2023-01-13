@@ -478,6 +478,7 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
 
 def get_next(iter, dataloader):
     try:
+        print(type(iter))
         inputs_u, _ = next(iter)
     except StopIteration:
         print("I catched")

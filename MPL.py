@@ -5,11 +5,11 @@ from MPL_Data import *
 
 #args:
 
-args.batch_size = 4
-args.data_dir = 'datasets/hymenoptera_data'
+args.batch_size = 32
+# args.data_dir = 'datasets/hymenoptera_data'
 args.seed = 1
-# args.data_dir = 'datasets/flowers'
-args.val_size_percentage  = 0.2
+args.data_dir = 'datasets/flowers'
+args.val_size_percentage = 0.2
 args.test_size_percentage = 0.2
 args.num_workers = 2 if torch.cuda.is_available() else 0
 args.pin_memory = True if torch.cuda.is_available() else False
@@ -61,7 +61,7 @@ s_model, t_model, hist = train_model_2(args, t_model, s_model , dataloaders, cri
 
 
 x = np.arange(1, args.num_epochs + 1)
-fig = plt.figure(figsize=(10, 10))
+fig = plt.figure(figsize=(20, 10))
 
 ax = fig.add_subplot(1, 2, 1)
 ax.set_xlabel('Epochs')

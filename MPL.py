@@ -1,30 +1,17 @@
 from MPL_utils import *
+from MPL_Data import *
 
-# scikit-learn imports
-
-# Data augmentation and normalization for training
-# Just normalization for validation
-# data_transforms = {
-#     'unlabeled': transforms.Compose([
-#         transforms.RandomResizedCrop(224),
-#         transforms.RandomHorizontalFlip(),
-#         transforms.ToTensor(),
-#         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-#     ]),
-#     'val': transforms.Compose([
-#         transforms.Resize(256),
-#         transforms.CenterCrop(224),
-#         transforms.ToTensor(),
-#         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-#     ]),
-# }
 #args:
 
 args.batch_size = 4
-args.data_dir = 'datasets/hymenoptera_data'
+args.data_dir = 'datasets/hymenoptera_data_2'
+args.seed = 1
+# args.data_dir = 'datasets/flowers'
+args.val_size_percentage  = 0.2
+args.test_size_percentage = 0.2
 args.num_workers = 4 if torch.cuda.is_available() else 0
-args.num_labels_percent = 0.01
-args.num_classes = 2
+args.pin_memory =  True if torch.cuda.is_available() else False
+args.num_labels_percent = 0.1
 args.num_epochs = 25         # Number of epochs to train for
 args.model_name = "vgg"         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet]
 args.feature_extract = True     # Flag for feature extracting. When False, we fine-tune the whole model,  when True we only update the reshaped layer params
@@ -36,31 +23,13 @@ args.uda_steps = 1
 args.warmup_epoch_num = 5
 
 
-basic_transform = transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.ToTensor()])
-
-#code:
-dirs = {'unlabeled': 'train', 'val': 'val'}
-image_datasets = {x: ImageFolder(os.path.join(args.data_dir, dirs[x]), basic_transform) for x in ['unlabeled', 'val']}
-
-args.num_labeled = round(args.num_labels_percent * len(image_datasets['unlabeled']))
-labeled_idx, _ = x_u_split(args, image_datasets['unlabeled'].targets)
-image_datasets['labeled'] = Subset(image_datasets['unlabeled'], labeled_idx)
-
-dataloaders = {x: DataLoader(image_datasets[x], batch_size=args.batch_size,
-                             shuffle=True, num_workers=args.num_workers) for x in ['unlabeled', 'labeled', 'val']}
-dataset_sizes = {x: len(image_datasets[x]) for x in ['unlabeled', 'labeled', 'val']}
-class_names = image_datasets['unlabeled'].classes
+dataloaders, dataset_sizes = get_loaders(args)
 
 print(device)
-# Get a batch of training data
-#unlabeled_set = dataloaders['unlabeled']
 
 # Initialize the model for this run
 t_model, input_size = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
 s_model, _ = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
-
 
 # Print the model we just instantiated
 print(t_model)   # student has same model
@@ -106,6 +75,3 @@ plt.show()
 # ax.set_title('Accuracy - train and test')
 # ax.plot(x, test_accuracy, x, train_accuracy)
 # ax.legend(["test Accuracy", "train Accuracy"])
-
-
-

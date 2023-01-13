@@ -17,8 +17,10 @@ from kornia import augmentation as K
 from kornia.augmentation import AugmentationSequential
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-varAntsBees  = [0.229, 0.224, 0.225]
+varAntsBees = [0.229, 0.224, 0.225]
 meanAntsBees = [0.485, 0.456, 0.406]
+
+
 def set_parameter_requires_grad(model, feature_extracting=False):
     # approach 1
     if feature_extracting:
@@ -39,8 +41,6 @@ def set_parameter_requires_grad(model, feature_extracting=False):
             param.requires_grad = True
     # note: you can also mix between frozen layers and trainable layers, but you'll need a custom
     # function that loops over the model's layers and you specify which layers are frozen.
-
-
 
 
 def imshow(inp, title=None):
@@ -137,31 +137,32 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
 
     return model_ft, input_size
 
+
 def extract_params_to_learn(model_ft, feature_extract):
     params_to_update = model_ft.parameters()
     print("Params to learn:")
     if feature_extract:
         params_to_update = []
-        for name,param in model_ft.named_parameters():
+        for name, param in model_ft.named_parameters():
             if param.requires_grad == True:
                 params_to_update.append(param)
-                print("\t",name)
+                print("\t", name)
     else:
-        for name,param in model_ft.named_parameters():
+        for name, param in model_ft.named_parameters():
             if param.requires_grad == True:
-                print("\t",name)
+                print("\t", name)
     return params_to_update
-
 
 
 """
 Training function
 """
+
+
 def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs=25):
     since = time.time()
 
     s_val_acc_history = []
-
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -175,7 +176,7 @@ def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs
             if phase == 'labeled':
                 model.train()  # Set model to training mode
             else:
-                model.eval()   # Set model to evaluate mode
+                model.eval()  # Set model to evaluate mode
 
             running_loss = 0.0
             running_corrects = 0
@@ -227,12 +228,13 @@ def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs
     model.load_state_dict(best_model_wts)
     return model, val_acc_history
 
+
 class args:
-    x=1
+    x = 1
 
 
-def x_u_split(args, labels):
-    label_per_class = args.num_labeled // args.num_classes
+def x_split(args, labels, size):
+    label_per_class = size // args.num_classes
     labels = np.array(labels)
     labeled_idx = []
     # unlabeled data: all training data
@@ -242,27 +244,77 @@ def x_u_split(args, labels):
         idx = np.random.choice(idx, label_per_class, False)
         labeled_idx.extend(idx)
     labeled_idx = np.array(labeled_idx)
-    assert len(labeled_idx) == args.num_labeled
+    assert len(labeled_idx) == label_per_class * args.num_classes
     np.random.shuffle(labeled_idx)
     return labeled_idx, unlabeled_idx
 
-def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_optimizer):
+
+def x_split_separate(args, labels, size, labels_indexes=None, separate=True):
+    if labels_indexes is None:
+        labels_indexes = np.array(range(len(labels)))
+    label_per_class = size // args.num_classes
+    labels = np.array(labels)
+    test_idx = []
+    train_idx = []
+    for i in range(args.num_classes):
+        idx = np.where(labels == i)[0]
+        np.random.shuffle(idx)
+        test_idx.extend(idx[:label_per_class])
+        train_idx.extend(idx[label_per_class:])
+    test_idx = np.array(test_idx)
+    train_idx = np.array(train_idx)
+    assert len(test_idx) == label_per_class * args.num_classes
+    np.random.shuffle(test_idx)
+    np.random.shuffle(train_idx)
+    if separate:
+        return labels_indexes[test_idx], labels_indexes[train_idx]
+    else:
+        return labels_indexes[test_idx], labels_indexes
+
+
+def check_idx(train_idx, val_idx, test_idx, total_len):
+    train_idx = train_idx.tolist()
+    val_idx = val_idx.tolist()
+    test_idx = test_idx.tolist()
+    all_idx = np.array(range(total_len)).tolist()
+
+    sets = [set(train_idx), set(val_idx), set(test_idx), set(all_idx)]
+    empty_set = set()
+    a = sets[0] & sets[1]
+    b = sets[0] & sets[2]
+    c = sets[1] & sets[2]
+
+    d = sets[0] | sets[1] | sets[2]
+
+    assert(a == empty_set)
+    assert(b == empty_set)
+    assert(c == empty_set)
+    assert(d == sets[3])
+    return
+
+
+
+
+
+
+
+def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_optimizer):
     since = time.time()
     aug_weak = AugmentationSequential(
-                                    K.RandomHorizontalFlip(),
-                                    K.Normalize(meanAntsBees,varAntsBees),
-                                    same_on_batch=False,
-                                )
+        K.RandomHorizontalFlip(),
+        K.Normalize(meanAntsBees, varAntsBees),
+        same_on_batch=False,
+    )
     aug_strong = AugmentationSequential(
-                                    K.RandomHorizontalFlip(),
-                                    K.Normalize(meanAntsBees, varAntsBees),
-                                    K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.2),
-                                    K.RandomAffine((-15., 20.), (0.1, 0.1), (0.7, 1.2), (30., 50.), p=0.3),
-                                    K.RandomPerspective(0.5, p=0.3),
-                                    K.RandomGrayscale(p=0.1),
-                                    K.RandomGaussianNoise(0, 0.1, p=0.2),
-                                    same_on_batch=False,
-                                )
+        K.RandomHorizontalFlip(),
+        K.Normalize(meanAntsBees, varAntsBees),
+        K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.2),
+        K.RandomAffine((-15., 20.), (0.1, 0.1), (0.7, 1.2), (30., 50.), p=0.3),
+        K.RandomPerspective(0.5, p=0.3),
+        K.RandomGrayscale(p=0.1),
+        K.RandomGaussianNoise(0, 0.1, p=0.2),
+        same_on_batch=False,
+    )
     s_val_acc_history = []
     s_val_loss_history = []
 
@@ -274,7 +326,7 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
     best_acc = 0.0
     unlabeled_iter = iter(dataloaders['unlabeled'])
     step = -1
-    for epoch in range(args.num_epochs):    # this is epochs w.r.t the labeled dataset
+    for epoch in range(args.num_epochs):  # this is epochs w.r.t the labeled dataset
         print('Epoch {}/{}'.format(epoch, args.num_epochs - 1))
         print('-' * 10)
 
@@ -287,9 +339,8 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                 s_model.train()
             else:
                 dataset_to_iter = 'val'
-                s_model.eval()   # Set s_model to evaluate mode
+                s_model.eval()  # Set s_model to evaluate mode
                 t_model.eval()
-
 
             s_running_loss = 0.0
             t_running_loss = 0.0
@@ -306,10 +357,8 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                     step = step + 1
                     inputs_u, _ = next(unlabeled_iter)
                     inputs_u = inputs_u.to(device)
-                    inputs_uw = aug_weak(inputs_u)      # inputs_uw = aug_list_weak(inputs_u)   - kornia
-                    inputs_us = aug_strong(inputs_u)    # inputs_us = aug_list_strong(inputs_u) - kornia
-
-
+                    inputs_uw = aug_weak(inputs_u)  # inputs_uw = aug_list_weak(inputs_u)   - kornia
+                    inputs_us = aug_strong(inputs_u)  # inputs_us = aug_list_strong(inputs_u) - kornia
 
                 # forward
                 # track history if only in train
@@ -364,14 +413,12 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                             t_loss_mpl = s_diff * F.cross_entropy(t_logits_us, hard_pseudo_label_on_s.long())
                             t_loss = t_loss_uda + t_loss_mpl
 
-                        else: # in warmup case, student doesn't learn, so teacher's loss is only from itself
+                        else:  # in warmup case, student doesn't learn, so teacher's loss is only from itself
                             t_loss = t_loss_uda
                             with torch.no_grad():
                                 s_outputs = s_model(inputs_l)
                                 s_loss = F.cross_entropy(s_outputs.detach(), labels.long())
                                 _, s_preds = torch.max(s_outputs, 1)
-
-
 
                         t_optimizer.zero_grad()
                         t_loss.backward()
@@ -380,7 +427,6 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                         with torch.no_grad():
                             outputs = t_model(inputs_l)
                             _, t_preds = torch.max(outputs, 1)
-
 
                 # statistics
                 s_running_loss += s_loss.item() * inputs_l.size(0)
@@ -393,9 +439,10 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
             t_epoch_loss = t_running_loss / len(dataloaders[dataset_to_iter].dataset)
             t_epoch_acc = t_running_corrects.double().cpu() / len(dataloaders[dataset_to_iter].dataset)
 
-
-            if epoch >= args.warmup_epoch_num or phase=='val':
-                print('{} T_Loss: {:.4f} T_Acc: {:.4f} S_Loss: {:.4f} S_Acc: {:.4f}'.format(phase, t_epoch_loss, t_epoch_acc, s_epoch_loss, s_epoch_acc))
+            if epoch >= args.warmup_epoch_num or phase == 'val':
+                print('{} T_Loss: {:.4f} T_Acc: {:.4f} S_Loss: {:.4f} S_Acc: {:.4f}'.format(phase, t_epoch_loss,
+                                                                                            t_epoch_acc, s_epoch_loss,
+                                                                                            s_epoch_acc))
             else:
                 # warmup
                 print('{} : Warmup. T_Loss: {:.4f} T_Acc: {:.4f} '.format(phase, t_epoch_loss, t_epoch_acc))
@@ -412,7 +459,6 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
                 s_train_loss_history.append(s_epoch_loss)
                 t_train_loss_history.append(t_epoch_loss)
 
-
         print()
 
     time_elapsed = time.time() - since
@@ -422,5 +468,7 @@ def train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_o
     # load best model weights
     s_model.load_state_dict(best_s_model_wts)
     t_model.load_state_dict(best_t_model_wts)
-    return s_model, t_model, {"s_val_acc" : s_val_acc_history, "s_val_loss" : s_val_loss_history, "s_train_loss" : s_train_loss_history, "t_train_loss" : t_train_loss_history}
+    return s_model, t_model, {"s_val_acc": s_val_acc_history, "s_val_loss": s_val_loss_history,
+                              "s_train_loss": s_train_loss_history, "t_train_loss": t_train_loss_history}
+
 

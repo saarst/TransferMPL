@@ -6,7 +6,7 @@ from MPL_Data import *
 #args:
 
 args.batch_size = 4
-args.data_dir = 'datasets/hymenoptera_data_2'
+args.data_dir = 'datasets/hymenoptera_data'
 args.seed = 1
 # args.data_dir = 'datasets/flowers'
 args.val_size_percentage  = 0.2

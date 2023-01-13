@@ -526,6 +526,7 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             try:
                 inputs_u, _ = next(unlabeled_iter)
             except StopIteration:
+                print("I catched")
                 unlabeled_iter = iter(dataloaders['unlabeled'])
                 inputs_u, _ = next(unlabeled_iter)
             inputs_u = inputs_u.to(device)

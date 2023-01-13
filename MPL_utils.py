@@ -534,6 +534,7 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             inputs_l = inputs_l.to(device)
             inputs_l = aug_weak(inputs_l)
             labels = labels.to(device)
+            print("Im here")
             inputs_u, unlabeled_iter = get_next(unlabeled_iter, dataloaders['unlabeled'])
 
             inputs_u = inputs_u.to(device)

@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from MPL_utils import *
 from MPL_Data import *
 
@@ -10,7 +12,7 @@ args.seed = 1
 args.val_size_percentage  = 0.2
 args.test_size_percentage = 0.2
 args.num_workers = 4 if torch.cuda.is_available() else 0
-args.pin_memory =  True if torch.cuda.is_available() else False
+args.pin_memory = True if torch.cuda.is_available() else False
 args.num_labels_percent = 0.1
 args.num_epochs = 25         # Number of epochs to train for
 args.model_name = "vgg"         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet]
@@ -55,23 +57,25 @@ criterion = nn.CrossEntropyLoss()
 # Train and evaluate
 #t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)
 
-s_model, t_model, hist = train_model(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_optimizer)
-print("Plotting")
-x = np.arange(1, args.num_epochs + 1)
-s_fig = plt.figure(figsize=(8, 8))
-ax = s_fig.add_subplot(1, 1, 1)
-ax.set_xlabel('Epochs')
-ax.set_ylabel('Loss\Acc')
-ax.set_title('Loss - student')
-ax.plot(x, hist['s_val_acc'], x, hist['s_train_loss'])
-ax.legend(["Student Val Accuray", "Student Train Loss"])
-s_fig.tight_layout()
-plt.show()
+s_model, t_model, hist = train_model_2(args, t_model, s_model , dataloaders, criterion, t_optimizer,s_optimizer)
 
-# fig = plt.figure(figsize=(8, 8))
-# ax = fig.add_subplot(2, 1, 2)
-# ax.set_xlabel('Epochs')
-# ax.set_ylabel('Accuracy')
-# ax.set_title('Accuracy - train and test')
-# ax.plot(x, test_accuracy, x, train_accuracy)
-# ax.legend(["test Accuracy", "train Accuracy"])
+
+x = np.arange(1, args.num_epochs + 1)
+fig = plt.figure(figsize=(10, 10))
+
+ax = fig.add_subplot(1, 2, 1)
+ax.set_xlabel('Epochs')
+ax.set_ylabel('Loss')
+ax.set_title('Train Loss - student and teacher')
+ax.plot(x, hist['t_train_loss'], x, hist['s_train_loss'])
+ax.legend(["Teacher train loss", "Student train loss"])
+
+ax = fig.add_subplot(1, 2, 2)
+ax.set_xlabel('Epochs')
+ax.set_ylabel('Acc')
+ax.set_title('Validation accuracy - student and teacher')
+ax.plot(x, hist['t_val_acc'], x, hist['s_val_acc'])
+ax.legend(["Teacher val acc", "Student val acc"])
+
+fig.tight_layout()
+plt.show()

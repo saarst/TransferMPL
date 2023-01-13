@@ -520,7 +520,6 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
     for epoch in range(args.num_epochs):  # this is epochs w.r.t the labeled dataset
         print('Epoch {}/{}'.format(epoch, args.num_epochs - 1))
         print('-' * 10)
-        print(dataloaders)
 
         # Each epoch has a training and validation phase
         # train:
@@ -535,7 +534,6 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             inputs_l = inputs_l.to(device)
             inputs_l = aug_weak(inputs_l)
             labels = labels.to(device)
-            print("Im here")
             inputs_u, unlabeled_iter = get_next(unlabeled_iter, dataloaders['unlabeled'])
 
             inputs_u = inputs_u.to(device)

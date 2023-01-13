@@ -523,8 +523,11 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             inputs_l = inputs_l.to(device)
             inputs_l = aug_weak(inputs_l)
             labels = labels.to(device)
-
-            inputs_u, _ = next(unlabeled_iter)
+            try:
+                inputs_u, _ = next(unlabeled_iter)
+            except StopIteration:
+                unlabeled_iter = iter(dataloaders['unlabeled'])
+                inputs_u, _ = next(unlabeled_iter)
             inputs_u = inputs_u.to(device)
             inputs_uw = aug_weak(inputs_u)    # kornia
             inputs_us = aug_strong(inputs_u)  # kornia

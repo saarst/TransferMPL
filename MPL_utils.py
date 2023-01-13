@@ -478,7 +478,6 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
 
 def get_next(iter, dataloader):
     try:
-        print(type(iter))
         inputs_u, _ = next(iter)
     except StopIteration:
         print("I catched")
@@ -534,7 +533,7 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             inputs_l = inputs_l.to(device)
             inputs_l = aug_weak(inputs_l)
             labels = labels.to(device)
-            inputs_u, unlabeled_iter = get_next(unlabeled_iter, dataloaders['unlabeled'])
+            inputs_u, _ = next(unlabeled_iter)
 
             inputs_u = inputs_u.to(device)
             inputs_uw = aug_weak(inputs_u)    # kornia

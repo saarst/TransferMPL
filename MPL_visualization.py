@@ -7,7 +7,7 @@ def convert_to_imshow_format(image):
     norm = transforms.Normalize(invMean, invVar)
     image = norm(image)
     image = (image - torch.min(image)) / (torch.max(image) - torch.min(image))
-    image = image.numpy()
+    image = image.cpu().numpy()
     # convert from CHW to HWC
     # from 3x32x32 to 32x32x3
     return image.transpose(1, 2, 0)

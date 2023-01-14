@@ -1,15 +1,16 @@
+import matplotlib.pyplot as plt
+
 from MPL_utils import *
 
 
-def get_loaders(args, show_sample=False):
-
+def get_loaders(args):
     basic_transform = transforms.Compose([
-        transforms.RandomResizedCrop(224),
+        transforms.RandomCrop(224),
         transforms.ToTensor()])
 
     dataset = ImageFolder(args.data_dir, basic_transform)
-    class_names = dataset.classes
-    args.num_classes = len(class_names)
+    args.class_names = dataset.classes
+    args.num_classes = len(args.class_names)
     targets = np.array(dataset.targets)
     args.test_size = round(args.test_size_percentage * len(dataset))
 
@@ -33,3 +34,26 @@ def get_loaders(args, show_sample=False):
     dataset_sizes = {x: len(image_datasets[x]) for x in ['unlabeled', 'labeled', 'val', 'test']}
 
     return dataloaders, dataset_sizes
+
+
+def get_aug():
+    aug_weak = AugmentationSequential(
+        K.RandomHorizontalFlip(),
+        K.Normalize(meanAntsBees, varAntsBees),
+        same_on_batch=False,
+    )
+    aug_strong = AugmentationSequential(
+        K.RandomHorizontalFlip(),
+        K.Normalize(meanAntsBees, varAntsBees),
+        K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.2),
+        K.RandomAffine((-15., 20.), (0.1, 0.1), (0.7, 1.2), (30., 50.), p=0.3),
+        K.RandomPerspective(0.5, p=0.3),
+        K.RandomGrayscale(p=0.1),
+        K.RandomGaussianNoise(0, 0.1, p=0.2),
+        same_on_batch=False,
+    )
+    return {'aug_weak': aug_weak, 'aug_strong': aug_strong}
+
+
+
+

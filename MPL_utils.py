@@ -5,6 +5,7 @@ import time
 import os
 import copy
 import itertools
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 # pytorch imports
 import torch
@@ -19,7 +20,11 @@ from kornia.augmentation import AugmentationSequential
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 varAntsBees = [0.229, 0.224, 0.225]
+invVar = [1/0.229, 1/0.224, 1/0.225]
 meanAntsBees = [0.485, 0.456, 0.406]
+invMean = [-0.485,- 0.456, -0.406]
+
+
 
 
 def set_parameter_requires_grad(model, feature_extracting=False):
@@ -473,34 +478,10 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
                               "s_train_loss": s_train_loss_history, "t_train_loss": t_train_loss_history}
 
 
-
-
-
-def get_next(iter, dataloader):
-    try:
-        inputs_u, _ = next(iter)
-    except StopIteration:
-        iter = iter(dataloader)
-        inputs_u, _ = next(iter)
-    return inputs_u, iter
-
-def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_optimizer):
+def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_optimizer, aug):
     since = time.time()
-    aug_weak = AugmentationSequential(
-        K.RandomHorizontalFlip(),
-        K.Normalize(meanAntsBees, varAntsBees),
-        same_on_batch=False,
-    )
-    aug_strong = AugmentationSequential(
-        K.RandomHorizontalFlip(),
-        K.Normalize(meanAntsBees, varAntsBees),
-        K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.2),
-        K.RandomAffine((-15., 20.), (0.1, 0.1), (0.7, 1.2), (30., 50.), p=0.3),
-        K.RandomPerspective(0.5, p=0.3),
-        K.RandomGrayscale(p=0.1),
-        K.RandomGaussianNoise(0, 0.1, p=0.2),
-        same_on_batch=False,
-    )
+    aug_weak = aug['aug_weak']
+    aug_strong = aug['aug_strong']
 
     s_train_loss_history = []
     t_train_loss_history = []
@@ -521,6 +502,7 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
 
         # Each epoch has a training and validation phase
         # train:
+        start_of_train = time.time()
         t_model.train()  # Set model to training mode
         s_model.train()  # Set model to training mode
         s_running_loss = 0.0
@@ -600,13 +582,16 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
         s_train_loss_history.append(s_running_loss / len(dataloaders['labeled'].dataset))
         t_train_loss_history.append(t_running_loss / len(dataloaders['labeled'].dataset))
 
+        epoch_train_time = time.time() - start_of_train
+
         if epoch >= args.warmup_epoch_num:
-            print('Train: T_Loss: {:.4f} , S_Loss: {:.4f} '.format(t_train_loss_history[-1], s_train_loss_history[-1]))
+            print('Train: T_Loss: {:.4f} , S_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s'.format(t_train_loss_history[-1], s_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60))
         else:
             # warmup
-            print('Train - Warmup: T_Loss: {:.4f} '.format(t_train_loss_history[-1]))
+            print('Train - Warmup: T_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s'.format(t_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60))
 
         # Validation Phase:
+        start_of_valid = time.time()
         s_model.eval()  # Set s_model to evaluate mode
         t_model.eval()
         s_running_corrects = 0.0
@@ -626,7 +611,8 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
         s_val_acc_history.append(s_running_corrects.double().cpu() / len(dataloaders['val'].dataset))
         t_val_acc_history.append(t_running_corrects.double().cpu() / len(dataloaders['val'].dataset))
 
-        print('Val: T_Acc: {:.4f} , S_Acc: {:.4f} '.format(t_val_acc_history[-1], s_val_acc_history[-1]))
+        epoch_valid_time = time.time() - start_of_valid
+        print('Val: T_Acc: {:.4f} , S_Acc: {:.4f} ,Epoch validation time: {:.0f}m {:.0f}s'.format(t_val_acc_history[-1], s_val_acc_history[-1], epoch_valid_time // 60, epoch_valid_time % 60))
 
         if s_val_acc_history[-1] > best_s_acc:
             best_s_acc = s_val_acc_history[-1]
@@ -651,3 +637,23 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
                               "s_train_loss": s_train_loss_history, "t_train_loss": t_train_loss_history}
 
 
+# function to calcualte accuracy of the model
+def calculate_accuracy(args, model, dataloader):
+    model.eval() # put in evaluation mode
+    total_correct = 0
+    total_images = 0
+    confusion_matrix = np.zeros([args.num_classes,args.num_classes], int)
+    with torch.no_grad():
+        for data in dataloader:
+            images, labels = data
+            images = images.to(device)
+            labels = labels.to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total_images += labels.size(0)
+            total_correct += (predicted == labels).sum().item()
+            for i, l in enumerate(labels):
+                confusion_matrix[l.item(), predicted[i].item()] += 1
+
+    model_accuracy = total_correct / total_images * 100
+    return model_accuracy, confusion_matrix

@@ -7,9 +7,9 @@ from MPL_visualization import *
 #args:
 
 args.batch_size = 32
-# args.data_dir = 'datasets/hymenoptera_data'
+args.data_dir = 'datasets/hymenoptera_data'
 args.seed = 1
-args.data_dir = 'datasets/flowers'
+# args.data_dir = 'datasets/flowers'
 args.val_size_percentage = 0.008
 args.test_size_percentage = 0.2
 args.num_workers = 2 if torch.cuda.is_available() else 0

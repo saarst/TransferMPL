@@ -620,6 +620,17 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
         if s_val_acc_history[-1] > best_s_acc:
             best_s_acc = s_val_acc_history[-1]
             best_s_model_wts = copy.deepcopy(s_model.state_dict())
+            print('==> Saving model ...')
+            state = {
+                'student': s_model.state_dict(),
+                'teacher': t_model.state_dict(),
+                'epoch': epoch,
+                'args': args
+            }
+            subdir = os.path.join('.','checkpoints', args.data_dir.split("/")[1])
+            if not os.path.isdir(subdir):
+                os.makedirs(subdir)
+            torch.save(state, os.path.join(subdir, 'val_acc_' + str(best_s_acc.numpy()) + '.pth'))
 
         if t_val_acc_history[-1] > best_t_acc:
             best_t_acc = t_val_acc_history[-1]

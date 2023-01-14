@@ -73,6 +73,7 @@ def show_confusionMat(args , model, dataloader,s_or_t):
     # plot confusion matrix
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
     ax.matshow(confusion_matrix, aspect='auto', vmin=0, vmax=1000, cmap=plt.get_cmap('Blues'))
+    print(confusion_matrix)
     plt.title(s_or_t)
     plt.ylabel('Actual Category')
     plt.yticks(range(args.num_classes), args.class_names)

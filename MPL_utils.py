@@ -627,7 +627,7 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
                 'epoch': epoch,
                 'args': args
             }
-            subdir = os.path.join('.','checkpoints', args.data_dir.split("/")[1])
+            subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
             if not os.path.isdir(subdir):
                 os.makedirs(subdir)
             torch.save(state, os.path.join(subdir, 'best_student.pth'))

@@ -630,7 +630,7 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             subdir = os.path.join('.','checkpoints', args.data_dir.split("/")[1])
             if not os.path.isdir(subdir):
                 os.makedirs(subdir)
-            torch.save(state, os.path.join(subdir, 'val_acc_' + str(best_s_acc.numpy()) + '.pth'))
+            torch.save(state, os.path.join(subdir, 'best_student.pth'))
 
         if t_val_acc_history[-1] > best_t_acc:
             best_t_acc = t_val_acc_history[-1]

@@ -25,6 +25,8 @@ args.lambda_u = 0.5
 args.uda_steps = 1
 args.warmup_epoch_num = 3
 args.show_images = True
+args.load_best = True
+args.print_model = False
 
 
 dataloaders, dataset_sizes = get_loaders(args)
@@ -38,11 +40,19 @@ print(device)
 t_model, input_size = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
 s_model, _ = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
 
-# Print the model we just instantiated
-print(t_model)   # student has same model
+
+if args.print_model:
+    # Print the model we just instantiated
+    print(t_model)   # student has same model
 
 t_model = t_model.to(device)
 s_model = s_model.to(device)
+
+if args.load_best:
+    subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
+    state = torch.load(os.path.join(subdir, 'best_student.pth'), map_location=device)
+    s_model.load_state_dict(state['student'])
+    t_model.load_state_dict(state['teacher'])
 
 # Gather the parameters to be optimized/updated in this run. If we are
 #  fine-tuning we will be updating all parameters. However, if we are

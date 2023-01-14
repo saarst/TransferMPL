@@ -4,9 +4,14 @@ from MPL_utils import *
 
 
 def get_loaders(args):
-    basic_transform = transforms.Compose([
-        transforms.RandomCrop(224),
-        transforms.ToTensor()])
+    if args.data_dir == 'datasets/hymenoptera_data':
+        basic_transform = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.ToTensor()])
+    elif args.data_dir == 'datasets/flowers':
+        basic_transform = transforms.Compose([
+            transforms.RandomCrop(224),
+            transforms.ToTensor()])
 
     dataset = ImageFolder(args.data_dir, basic_transform)
     args.class_names = dataset.classes

@@ -49,6 +49,7 @@ t_model = t_model.to(device)
 s_model = s_model.to(device)
 
 if args.load_best:
+    print('==> Loading best model ...')
     subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
     state = torch.load(os.path.join(subdir, 'best_student.pth'), map_location=device)
     s_model.load_state_dict(state['student'])

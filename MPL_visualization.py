@@ -68,7 +68,7 @@ def show_graphs(args, hist):
 
 def show_confusionMat(args , model, dataloader,s_or_t):
     test_accuracy, confusion_matrix = calculate_accuracy(args, model, dataloader)
-    print(s_or_t + "test accuracy: {:.3f}%".format(test_accuracy))
+    print(s_or_t + " test accuracy: {:.3f}%".format(test_accuracy))
 
     # plot confusion matrix
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))

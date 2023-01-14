@@ -7,15 +7,15 @@ from MPL_visualization import *
 #args:
 
 args.batch_size = 32
-args.data_dir = 'datasets/hymenoptera_data'
+#args.data_dir = 'datasets/hymenoptera_data'
 args.seed = 1
-#args.data_dir = 'datasets/flowers'
+args.data_dir = 'datasets/flowers'
 args.val_size_percentage = 0.05
 args.test_size_percentage = 0.2
 args.num_workers = 2 if torch.cuda.is_available() else 0
 args.pin_memory = True if torch.cuda.is_available() else False
-args.num_labels_percent = 0.1
-args.num_epochs = 2         # Number of epochs to train for
+args.num_labels_percent = 0.05
+args.num_epochs = 20            # Number of epochs to train for
 args.model_name = "vgg"         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet]
 args.feature_extract = True     # Flag for feature extracting. When False, we fine-tune the whole model,  when True we only update the reshaped layer params
 args.temperature = 1
@@ -23,7 +23,7 @@ args.threshold = 0
 args.mask = 0
 args.lambda_u = 0.5
 args.uda_steps = 1
-args.warmup_epoch_num = 5
+args.warmup_epoch_num = 3
 args.show_images = True
 
 

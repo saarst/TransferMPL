@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from MPL_utils import *
 
@@ -69,7 +70,8 @@ def show_graphs(args, hist):
 def show_confusionMat(args , model, dataloader,s_or_t):
     test_accuracy, confusion_matrix = calculate_accuracy(args, model, dataloader)
     print(s_or_t + " test accuracy: {:.3f}%".format(test_accuracy))
-
+    df_cm = pd.DataFrame(confusion_matrix, args.class_names, args.class_names)
+    pp_matrix(df_cm,cmap="PuRd")
     # plot confusion matrix
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
     ax.matshow(confusion_matrix, aspect='auto', vmin=0, vmax=1000, cmap=plt.get_cmap('Blues'))

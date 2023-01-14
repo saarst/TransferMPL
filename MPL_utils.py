@@ -19,7 +19,6 @@ from kornia import augmentation as K
 from kornia.augmentation import AugmentationSequential
 import pandas as pd
 import seaborn as sn
-from pretty_confusion_matrix import pp_matrix
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 varImageNet = [0.229, 0.224, 0.225]

@@ -19,9 +19,9 @@ from kornia import augmentation as K
 from kornia.augmentation import AugmentationSequential
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-varAntsBees = [0.229, 0.224, 0.225]
+varImageNet = [0.229, 0.224, 0.225]
 invVar = [1/0.229, 1/0.224, 1/0.225]
-meanAntsBees = [0.485, 0.456, 0.406]
+meanImageNet = [0.485, 0.456, 0.406]
 invMean = [-0.485,- 0.456, -0.406]
 
 
@@ -308,12 +308,12 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
     since = time.time()
     aug_weak = AugmentationSequential(
         K.RandomHorizontalFlip(),
-        K.Normalize(meanAntsBees, varAntsBees),
+        K.Normalize(meanImageNet, varImageNet),
         same_on_batch=False,
     )
     aug_strong = AugmentationSequential(
         K.RandomHorizontalFlip(),
-        K.Normalize(meanAntsBees, varAntsBees),
+        K.Normalize(meanImageNet, varImageNet),
         K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.2),
         K.RandomAffine((-15., 20.), (0.1, 0.1), (0.7, 1.2), (30., 50.), p=0.3),
         K.RandomPerspective(0.5, p=0.3),

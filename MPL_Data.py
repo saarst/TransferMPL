@@ -32,6 +32,7 @@ def get_loaders(args):
                                  shuffle=True, num_workers=args.num_workers, pin_memory=args.pin_memory) for x in
                    ['unlabeled', 'labeled', 'val', 'test']}
     dataset_sizes = {x: len(image_datasets[x]) for x in ['unlabeled', 'labeled', 'val', 'test']}
+    print(dataset_sizes)
 
     return dataloaders, dataset_sizes
 
@@ -39,12 +40,12 @@ def get_loaders(args):
 def get_aug():
     aug_weak = AugmentationSequential(
         K.RandomHorizontalFlip(),
-        K.Normalize(meanAntsBees, varAntsBees),
+        K.Normalize(meanImageNet, varImageNet),
         same_on_batch=False,
     )
     aug_strong = AugmentationSequential(
         K.RandomHorizontalFlip(),
-        K.Normalize(meanAntsBees, varAntsBees),
+        K.Normalize(meanImageNet, varImageNet),
         K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.2),
         K.RandomAffine((-15., 20.), (0.1, 0.1), (0.7, 1.2), (30., 50.), p=0.3),
         K.RandomPerspective(0.5, p=0.3),

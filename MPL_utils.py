@@ -586,14 +586,15 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
             t_loss.backward()
             t_optimizer.step()
 
-            t_scheduler.step()
-            if epoch >= args.warmup_epoch_num:
-                s_scheduler.step()
+
 
             # statistics
             s_running_loss += s_loss.item() * inputs_l.size(0)
             t_running_loss += t_loss.item() * inputs_l.size(0)
 
+        t_scheduler.step()
+        if epoch >= args.warmup_epoch_num:
+            s_scheduler.step()
         s_train_loss_history.append(s_running_loss / len(dataloaders['labeled'].dataset))
         t_train_loss_history.append(t_running_loss / len(dataloaders['labeled'].dataset))
 

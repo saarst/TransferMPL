@@ -308,6 +308,7 @@ def check_idx(train_idx, val_idx, test_idx, total_len):
 
 def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_optimizer):
     since = time.time()
+    cos = nn.CosineSimilarity()
     aug_weak = AugmentationSequential(
         K.RandomHorizontalFlip(),
         K.Normalize(meanImageNet, varImageNet),
@@ -392,9 +393,13 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
                         soft_pseudo_label = torch.softmax(t_logits_uw.detach() / args.temperature, dim=-1)
                         max_probs, hard_pseudo_label_on_w = torch.max(soft_pseudo_label, dim=-1)
                         mask = max_probs.ge(args.threshold).float()
-                        t_loss_u = torch.mean(
-                            -(soft_pseudo_label * torch.log_softmax(t_logits_us, dim=-1)).sum(dim=-1) * mask
-                        )
+                        if args.unsupervised == "CE":
+                            t_loss_u = torch.mean(
+                                -(soft_pseudo_label * torch.log_softmax(t_logits_us, dim=-1)).sum(dim=-1) * mask
+                            )
+                        else:
+                            t_loss_u = torch.mean(-cos(soft_pseudo_label, torch.softmax(t_logits_uw.detach(), dim=-1)))
+
                         weight_u = args.lambda_u * min(1., (step + 1) / args.uda_steps)
                         t_loss_uda = t_loss_l + weight_u * t_loss_u
 
@@ -480,8 +485,9 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
                               "s_train_loss": s_train_loss_history, "t_train_loss": t_train_loss_history}
 
 
-def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_optimizer, aug):
+def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler, s_optimizer, s_scheduler, aug):
     since = time.time()
+    cos = nn.CosineSimilarity()
     aug_weak = aug['aug_weak']
     aug_strong = aug['aug_strong']
 
@@ -535,9 +541,12 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             soft_pseudo_label_w = torch.softmax(t_logits_uw.detach() / args.temperature, dim=-1)
             max_probs, hard_pseudo_label_w = torch.max(soft_pseudo_label_w, dim=-1)
             mask = max_probs.ge(args.threshold).float()
-            t_loss_u = torch.mean(
-                -(soft_pseudo_label_w * torch.log_softmax(t_logits_us, dim=-1)).sum(dim=-1) * mask # Cross entropy (unsupervised)
-            )
+            if args.unsupervised == "CE":
+                t_loss_u = torch.mean(
+                    -(soft_pseudo_label_w * torch.log_softmax(t_logits_us, dim=-1)).sum(dim=-1) * mask
+                )
+            else:
+                t_loss_u = torch.mean(-cos(soft_pseudo_label_w, torch.softmax(t_logits_uw.detach(), dim=-1)))
             weight_u = args.lambda_u * min(1., (step + 1) / args.uda_steps)
             t_loss_uda = t_loss_l + weight_u * t_loss_u
 
@@ -577,6 +586,9 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
             t_loss.backward()
             t_optimizer.step()
 
+            t_scheduler.step()
+            s_scheduler.step()
+
             # statistics
             s_running_loss += s_loss.item() * inputs_l.size(0)
             t_running_loss += t_loss.item() * inputs_l.size(0)
@@ -587,10 +599,10 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s
         epoch_train_time = time.time() - start_of_train
 
         if epoch >= args.warmup_epoch_num:
-            print('Train: T_Loss: {:.4f} , S_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s'.format(t_train_loss_history[-1], s_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60))
+            print('Train: T_Loss: {:.4f} , S_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s, s_lr: {:.4f}, t_lr: {:.4f}'.format(t_train_loss_history[-1], s_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60, t_scheduler.get_last_lr(), s_scheduler.get_last_lr() ))
         else:
             # warmup
-            print('Train - Warmup: T_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s'.format(t_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60))
+            print('Train - Warmup: T_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s, s_lr: {:.4f}, t_lr: {:.4f}'.format(t_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60, t_scheduler.get_last_lr(), s_scheduler.get_last_lr()))
 
         # Validation Phase:
         start_of_valid = time.time()

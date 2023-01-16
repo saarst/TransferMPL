@@ -24,7 +24,8 @@ args.mask = 0
 args.lambda_u = 0.5
 args.uda_steps = 1
 args.warmup_epoch_num = 3
-args.show_images = True
+args.unsupervised = "cos"
+args.show_images = False
 args.load_best = True
 args.print_model = False
 
@@ -67,13 +68,17 @@ s_params_to_update = extract_params_to_learn(s_model, args.feature_extract)
 t_optimizer = torch.optim.SGD(t_params_to_update, lr=0.001, momentum=0.9)
 s_optimizer = torch.optim.SGD(s_params_to_update, lr=0.001, momentum=0.9)
 
+t_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(t_optimizer)
+s_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(s_optimizer)
+
+
 # Setup the loss fn
 criterion = nn.CrossEntropyLoss()
 
 # Train and evaluate
 #t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)
 
-s_model, t_model, hist = train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_optimizer, aug)
+s_model, t_model, hist = train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler, s_optimizer, s_scheduler, aug)
 
 show_graphs(args, hist)
 show_confusionMat(args, s_model, dataloaders['test'], "Student")

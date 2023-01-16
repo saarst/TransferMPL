@@ -72,8 +72,8 @@ s_params_to_update = extract_params_to_learn(s_model, args.feature_extract)
 t_optimizer = torch.optim.AdamW(t_params_to_update)
 s_optimizer = torch.optim.AdamW(s_params_to_update)
 
-t_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(t_optimizer)
-s_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(s_optimizer)
+t_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(t_optimizer, 5)
+s_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(s_optimizer, 5)
 
 
 # Setup the loss fn

@@ -600,10 +600,10 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
         epoch_train_time = time.time() - start_of_train
 
         if epoch >= args.warmup_epoch_num:
-            print('Train: T_Loss: {:.4f} , S_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s, s_lr: {:.4f}, t_lr: {:.4f}'.format(t_train_loss_history[-1], s_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60, t_scheduler.get_last_lr(), s_scheduler.get_last_lr() ))
+            print('Train: T_Loss: {:.4f} , S_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s'.format(t_train_loss_history[-1], s_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60))
         else:
             # warmup
-            print('Train - Warmup: T_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s, s_lr: {:.4f}, t_lr: {:.4f}'.format(t_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60, t_scheduler.get_last_lr(), s_scheduler.get_last_lr()))
+            print('Train - Warmup: T_Loss: {:.4f} ,Epoch train time: {:.0f}m {:.0f}s'.format(t_train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60))
 
         # Validation Phase:
         start_of_valid = time.time()

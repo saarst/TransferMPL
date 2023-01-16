@@ -587,7 +587,8 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
             t_optimizer.step()
 
             t_scheduler.step()
-            s_scheduler.step()
+            if epoch >= args.warmup_epoch_num:
+                s_scheduler.step()
 
             # statistics
             s_running_loss += s_loss.item() * inputs_l.size(0)

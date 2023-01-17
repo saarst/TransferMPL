@@ -18,14 +18,14 @@ args.pin_memory = True if torch.cuda.is_available() else False
 if torch.cuda.is_available():
     torch.backends.cudnn.benchmark = True
 args.num_labels_percent = 0.04
-args.num_epochs = 20            # Number of epochs to train for
+args.num_epochs = 40            # Number of epochs to train for
 args.model_name = "vgg"         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet]
 args.feature_extract = True     # Flag for feature extracting. When False, we fine-tune the whole model,  when True we only update the reshaped layer params
 args.temperature = 1
 args.threshold = 0
 args.lambda_u = 1
 args.uda_steps = 1
-args.warmup_epoch_num = 5
+args.warmup_epoch_num = 10
 args.unsupervised = "cos"
 args.show_images = False
 args.load_best = False

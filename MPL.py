@@ -73,8 +73,8 @@ s_params_to_update = extract_params_to_learn(s_model, args.feature_extract)
 t_optimizer = torch.optim.RAdam(t_params_to_update)
 s_optimizer = torch.optim.RAdam(s_params_to_update)
 
-t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.01, steps_per_epoch=dataset_sizes['labeled'] / args.batch_size, epochs=args.num_epochs,verbose=True)
-s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.01, steps_per_epoch=dataset_sizes['labeled'] / args.batch_size, epochs=args.num_epochs)
+t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.01, steps_per_epoch=round(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs,verbose=True)
+s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.01, steps_per_epoch=round(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
 
 
 # Setup the loss fn

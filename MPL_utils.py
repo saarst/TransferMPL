@@ -488,6 +488,10 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
 def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler, s_optimizer, s_scheduler, aug):
     since = time.time()
     cos = nn.CosineSimilarity()
+
+    t_scaler = torch.cuda.amp.GradScaler()
+    s_scaler = torch.cuda.amp.GradScaler()
+
     aug_weak = aug['aug_weak']
     aug_strong = aug['aug_strong']
 
@@ -564,8 +568,9 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
             if epoch >= args.warmup_epoch_num:     # if we finished warmup, student can also train (1st part)
                 # student Backward:
                 s_optimizer.zero_grad()
-                s_loss.backward()
-                s_optimizer.step()
+                s_scaler.scale(s_loss).backward()
+                s_scaler.step(s_optimizer)
+                s_scaler.update()
 
                 # now calc t_loss_mps
                 with torch.no_grad():
@@ -583,8 +588,13 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
 
             # teacher Backward:
             t_optimizer.zero_grad()
-            t_loss.backward()
-            t_optimizer.step()
+            t_scaler.scale(t_loss).backward()
+            t_scaler.step(t_optimizer)
+            t_scaler.update()
+
+            t_scheduler.step()
+            if epoch >= args.warmup_epoch_num:
+                s_scheduler.step()
 
 
 
@@ -625,9 +635,6 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
         s_val_acc_history.append(s_running_corrects.double().cpu() / len(dataloaders['val'].dataset))
         t_val_acc_history.append(t_running_corrects.double().cpu() / len(dataloaders['val'].dataset))
 
-        t_scheduler.step(t_val_acc_history[-1])
-        if epoch >= args.warmup_epoch_num:
-            s_scheduler.step(s_val_acc_history[-1])
 
         epoch_valid_time = time.time() - start_of_valid
         print('Val: T_Acc: {:.4f} , S_Acc: {:.4f} ,Epoch validation time: {:.0f}m {:.0f}s'.format(t_val_acc_history[-1], s_val_acc_history[-1], epoch_valid_time // 60, epoch_valid_time % 60))

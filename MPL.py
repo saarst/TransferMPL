@@ -21,10 +21,9 @@ args.model_name = "vgg"         # Models to choose from [resnet, alexnet, vgg, s
 args.feature_extract = True     # Flag for feature extracting. When False, we fine-tune the whole model,  when True we only update the reshaped layer params
 args.temperature = 1
 args.threshold = 0
-args.mask = 0
-args.lambda_u = 0.5
+args.lambda_u = 1
 args.uda_steps = 1
-args.warmup_epoch_num = 3
+args.warmup_epoch_num = 5
 args.unsupervised = "cos"
 args.show_images = False
 args.load_best = True
@@ -69,11 +68,11 @@ s_params_to_update = extract_params_to_learn(s_model, args.feature_extract)
 # t_optimizer = torch.optim.SGD(t_params_to_update, lr=0.001, momentum=0.9)
 # s_optimizer = torch.optim.SGD(s_params_to_update, lr=0.001, momentum=0.9)
 
-t_optimizer = torch.optim.AdamW(t_params_to_update)
-s_optimizer = torch.optim.AdamW(s_params_to_update)
+t_optimizer = torch.optim.RAdam(t_params_to_update)
+s_optimizer = torch.optim.RAdam(s_params_to_update)
 
-t_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(t_optimizer, 5, verbose=True)
-s_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(s_optimizer, 5, verbose=True)
+t_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(t_optimizer, mode='max', factor=0.1, patience=1, verbose=True)
+s_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(s_optimizer, mode='max', factor=0.1, patience=1, verbose=True)
 
 
 # Setup the loss fn

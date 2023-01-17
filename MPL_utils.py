@@ -592,9 +592,7 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
             s_running_loss += s_loss.item() * inputs_l.size(0)
             t_running_loss += t_loss.item() * inputs_l.size(0)
 
-        t_scheduler.step()
-        if epoch >= args.warmup_epoch_num:
-            s_scheduler.step()
+
         s_train_loss_history.append(s_running_loss / len(dataloaders['labeled'].dataset))
         t_train_loss_history.append(t_running_loss / len(dataloaders['labeled'].dataset))
 
@@ -626,6 +624,10 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
 
         s_val_acc_history.append(s_running_corrects.double().cpu() / len(dataloaders['val'].dataset))
         t_val_acc_history.append(t_running_corrects.double().cpu() / len(dataloaders['val'].dataset))
+
+        t_scheduler.step(t_val_acc_history[-1])
+        if epoch >= args.warmup_epoch_num:
+            s_scheduler.step(s_val_acc_history[-1])
 
         epoch_valid_time = time.time() - start_of_valid
         print('Val: T_Acc: {:.4f} , S_Acc: {:.4f} ,Epoch validation time: {:.0f}m {:.0f}s'.format(t_val_acc_history[-1], s_val_acc_history[-1], epoch_valid_time // 60, epoch_valid_time % 60))

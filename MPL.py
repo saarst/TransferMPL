@@ -26,7 +26,7 @@ args.uda_steps = 1
 args.warmup_epoch_num = 5
 args.unsupervised = "cos"
 args.show_images = False
-args.load_best = True
+args.load_best = False
 args.print_model = False
 
 

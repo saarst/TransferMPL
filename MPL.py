@@ -7,7 +7,7 @@ from MPL_visualization import *
 
 #args:
 
-args.batch_size = 128
+args.batch_size = 64
 # args.data_dir = 'datasets/hymenoptera_data'
 args.seed = 1
 args.data_dir = 'datasets/flowers'

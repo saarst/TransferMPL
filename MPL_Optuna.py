@@ -9,13 +9,13 @@ def objective(trial, args, criterion, dataloaders, dataset_sizes, aug):
     t_params_to_update = extract_params_to_learn(t_model)
     s_params_to_update = extract_params_to_learn(s_model)
 
-    optimizer_name = trial.suggest_categorical("optimizer", ["RAdam", "AdamW", "SGD"])
-    if optimizer_name == "SGD":
-        t_optimizer = getattr(optim, optimizer_name)(params=t_params_to_update, lr=0.001, momentum=0.9)
-        s_optimizer = getattr(optim, optimizer_name)(params=t_params_to_update, lr=0.001, momentum=0.9)
-    else:
-        t_optimizer = getattr(optim, optimizer_name)(params=t_params_to_update)
-        s_optimizer = getattr(optim, optimizer_name)(params=s_params_to_update)
+    beta1 = trial.suggest_float("beta1", 0.6, 2)
+    beta2 = trial.suggest_float("beta2", 0.6, 2)
+    weight_dacy = trial.suggest_float("weight_dacy", 0, 2)
+    min_lr = trial.suggest_float("max_lr", 1e-4, 1e-1, log=True)
+
+    t_optimizer = optim.AdamW(params=t_params_to_update, lr=min_lr, betas=(beta1,beta2), weight_dacy=weight_dacy)
+    s_optimizer = optim.AdamW(params=t_params_to_update, lr=min_lr, betas=(beta1,beta2), weight_dacy=weight_dacy)
 
     steps_per_epoch = round(dataset_sizes['labeled'] / args.batch_size)
     max_steps = steps_per_epoch * args.num_epochs
@@ -26,7 +26,7 @@ def objective(trial, args, criterion, dataloaders, dataset_sizes, aug):
     s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=max_lr,
                                                       steps_per_epoch=steps_per_epoch,
                                                       epochs=args.num_epochs)
-    args.temperature = trial.suggest_float("temperature", 0.5, 2)
+    args.temperature = trial.suggest_float("temperature", 0.5, 3)
     args.lambda_u = trial.suggest_float("lambda_u", 0.1, 2)
     args.uda_steps = trial.suggest_float("uda_steps", 1, 0.2 * max_steps)
     args.threshold = trial.suggest_float("threshold", 0.65, 0.95, step=0.1)

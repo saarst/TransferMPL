@@ -7,13 +7,13 @@ parser.add_argument('--num_labels_percent', type=int, default=0.03, help='percen
 
 parser.add_argument('--num_epochs', default=10, type=int, help='number of epochs to run')
 
-parser.add_argument('--warmup_epoch_num', default=2, type=int, help='warmup steps')
+parser.add_argument('--warmup_epoch_num', default=5, type=int, help='warmup steps')
 
 parser.add_argument('--model_name', default='vgg', type=str, help='model name for feature extracting')
 
 parser.add_argument('--unsupervised', default='CE', type=str, help='loss for unsupervised, can be "CE" or "cos" ')
 
-parser.add_argument('--finetune_epochs', default=10, type=int, help='finetune epochs')
+parser.add_argument('--finetune_epochs', default=25, type=int, help='finetune epochs')
 
 parser.add_argument('--seed', default=None, type=int, help='seed for initializing training')
 

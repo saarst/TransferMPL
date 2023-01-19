@@ -157,17 +157,17 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
 
 def extract_params_to_learn(model_ft, feature_extract):
     params_to_update = model_ft.parameters()
-    print("Params to learn:")
+    # print("Params to learn:")
     if feature_extract:
         params_to_update = []
         for name, param in model_ft.named_parameters():
             if param.requires_grad == True:
                 params_to_update.append(param)
-                print("\t", name)
+                # print("\t", name)
     else:
         for name, param in model_ft.named_parameters():
             if param.requires_grad == True:
-                print("\t", name)
+                # print("\t", name)
     return params_to_update
 
 

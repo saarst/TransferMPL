@@ -9,7 +9,7 @@ def objective(trial, args, criterion, dataloaders, dataset_sizes, aug):
     t_params_to_update = extract_params_to_learn(t_model)
     s_params_to_update = extract_params_to_learn(s_model)
 
-    weight_decay = trial.suggest_float("weight_dacy", 0, 1)
+    weight_decay = trial.suggest_float("weight_decay", 0, 0.1)
 
     t_optimizer = optim.AdamW(params=t_params_to_update, weight_decay=weight_decay)
     s_optimizer = optim.AdamW(params=t_params_to_update, weight_decay=weight_decay)

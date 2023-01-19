@@ -9,12 +9,12 @@ from MPL_args import *
 
 # args:
 
-debug = True  # disable during debug
+debug = False  # disable during debug
 if debug:
     sys.argv = sys.argv + ['--name', 'debug',
-                           '--num_epochs', '1',
+                           '--num_epochs', '25',
                            '--model_name', 'vgg',
-                           '--switch_mode']
+                           '--optuna_mode']
 args = parser.parse_args()
 args = add_args(args)
 

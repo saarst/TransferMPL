@@ -9,9 +9,9 @@ def objective(trial, args, criterion, dataloaders, dataset_sizes, aug):
     t_params_to_update = extract_params_to_learn(t_model)
     s_params_to_update = extract_params_to_learn(s_model)
 
-    beta1 = trial.suggest_float("beta1", 0.6, 2)
-    beta2 = trial.suggest_float("beta2", 0.6, 2)
-    weight_decay = trial.suggest_float("weight_dacy", 0, 2)
+    beta1 = trial.suggest_float("beta1", 0.6, 1)
+    beta2 = trial.suggest_float("beta2", 0.6, 1)
+    weight_decay = trial.suggest_float("weight_dacy", 0, 1)
     min_lr = trial.suggest_float("max_lr", 1e-4, 1e-1, log=True)
 
     t_optimizer = optim.AdamW(params=t_params_to_update, lr=min_lr, betas=(beta1,beta2), weight_decay=weight_decay)

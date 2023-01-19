@@ -5,6 +5,7 @@ import time
 import os
 import copy
 import itertools
+import optuna
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 # pytorch imports
@@ -485,7 +486,7 @@ def train_model(args, t_model, s_model, dataloaders, criterion, t_optimizer, s_o
                               "s_train_loss": s_train_loss_history, "t_train_loss": t_train_loss_history}
 
 
-def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler, s_optimizer, s_scheduler, aug):
+def train_model_2(trial, args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler, s_optimizer, s_scheduler, aug):
     since = time.time()
     cos = nn.CosineSimilarity()
 
@@ -657,6 +658,17 @@ def train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t
         if t_val_acc_history[-1] > best_t_acc:
             best_t_acc = t_val_acc_history[-1]
             best_t_model_wts = copy.deepcopy(t_model.state_dict())
+
+        if args.optuna_mode:
+            # report back to Optuna how far it is (epoch-wise) into the trial and how well it is doing (accuracy)
+            trial.report(s_val_acc_history[-1], epoch)
+            # then, Optuna can decide if the trial should be pruned
+            # Handle pruning based on the intermediate value.
+            if trial.should_prune():
+                raise optuna.exceptions.TrialPruned()
+
+
+
 
     # all epochs finished:
     print()

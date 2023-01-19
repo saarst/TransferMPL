@@ -4,13 +4,14 @@ import torch.optim
 from MPL_utils import *
 from MPL_Data import *
 from MPL_visualization import *
+from MPL_Optuna import *
 
 #args:
 
-args.batch_size = 64
-# args.data_dir = 'datasets/hymenoptera_data'
+args.batch_size = 2
+args.data_dir = 'datasets/hymenoptera_data'
 args.seed = 1
-args.data_dir = 'datasets/flowers'
+# args.data_dir = 'datasets/flowers'
 args.val_size_percentage = 0.008
 args.test_size_percentage = 0.06
 args.num_workers = 2 if torch.cuda.is_available() else 0
@@ -18,7 +19,7 @@ args.pin_memory = True if torch.cuda.is_available() else False
 if torch.cuda.is_available():
     torch.backends.cudnn.benchmark = True
 args.num_labels_percent = 0.03
-args.num_epochs = 40            # Number of epochs to train for
+args.num_epochs = 2            # Number of epochs to train for
 args.model_name = "vgg"         # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet]
 args.feature_extract = True     # Flag for feature extracting. When False, we fine-tune the whole model,  when True we only update the reshaped layer params
 args.temperature = 1
@@ -30,6 +31,9 @@ args.unsupervised = "CE"
 args.show_images = False
 args.load_best = False
 args.print_model = False
+args.optuna_mode = True
+args.n_trials = 5 #optuna
+args.timeout = 180 #sec
 
 
 dataloaders, dataset_sizes = get_loaders(args)
@@ -66,28 +70,34 @@ if args.load_best:
 t_params_to_update = extract_params_to_learn(t_model, args.feature_extract)
 s_params_to_update = extract_params_to_learn(s_model, args.feature_extract)
 
+# Setup the loss fn
+criterion = nn.CrossEntropyLoss()
+
+if args.optuna_mode:
+    run_optuna(args ,t_model, s_model, criterion, dataloaders, dataset_sizes, aug)
+
+else:
 # Observe that all parameters are being optimized
 # t_optimizer = torch.optim.SGD(t_params_to_update, lr=0.001, momentum=0.9)
 # s_optimizer = torch.optim.SGD(s_params_to_update, lr=0.001, momentum=0.9)
 
-t_optimizer = torch.optim.RAdam(t_params_to_update)
-s_optimizer = torch.optim.RAdam(s_params_to_update)
+    t_optimizer = torch.optim.RAdam(t_params_to_update)
+    s_optimizer = torch.optim.RAdam(s_params_to_update)
 
-t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.01, steps_per_epoch=round(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
-s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.01, steps_per_epoch=round(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
+    t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.01, steps_per_epoch=round(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
+    s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.01, steps_per_epoch=round(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
 
 
-# Setup the loss fn
-criterion = nn.CrossEntropyLoss()
 
-# Train and evaluate
-#t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)
 
-s_model, t_model, hist = train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler, s_optimizer, s_scheduler, aug)
+    # Train and evaluate
+    #t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)
 
-show_graphs(args, hist)
-show_confusionMat(args, s_model, dataloaders['test'], "Student")
-show_confusionMat(args, t_model, dataloaders['test'], "Teacher")
+    s_model, t_model, hist = train_model_2(args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler, s_optimizer, s_scheduler, aug)
+
+    show_graphs(args, hist)
+    show_confusionMat(args, s_model, dataloaders['test'], "Student")
+    show_confusionMat(args, t_model, dataloaders['test'], "Teacher")
 
 
 

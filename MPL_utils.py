@@ -398,8 +398,6 @@ def train_model(trial, args, t_model, s_model, dataloaders, criterion, t_optimiz
             if epoch >= args.warmup_epoch_num:
                 s_scheduler.step()
 
-
-
             # statistics
             s_running_loss += s_loss.item() * inputs_l.size(0)
             t_running_loss += t_loss.item() * inputs_l.size(0)
@@ -443,18 +441,20 @@ def train_model(trial, args, t_model, s_model, dataloaders, criterion, t_optimiz
 
         if s_val_acc_history[-1] > best_s_acc:
             best_s_acc = s_val_acc_history[-1]
-            best_s_model_wts = copy.deepcopy(s_model.state_dict())
-            print('==> Saving model ...')
-            state = {
-                'student': s_model.state_dict(),
-                'teacher': t_model.state_dict(),
-                'epoch': epoch,
-                'args': args
-            }
-            subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
-            if not os.path.isdir(subdir):
-                os.makedirs(subdir)
-            torch.save(state, os.path.join(subdir, 'best_student.pth'))
+            if not args.optuna_mode:
+                best_s_model_wts = copy.deepcopy(s_model.state_dict())
+
+                state = {
+                    'student': s_model.state_dict(),
+                    'teacher': t_model.state_dict(),
+                    'epoch': epoch,
+                    'args': args
+                }
+                subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
+                if not os.path.isdir(subdir):
+                    os.makedirs(subdir)
+                print('==> Saving model ...')
+                torch.save(state, os.path.join(subdir, 'best_student.pth'))
 
         if t_val_acc_history[-1] > best_t_acc:
             best_t_acc = t_val_acc_history[-1]

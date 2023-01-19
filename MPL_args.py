@@ -5,7 +5,7 @@ parser.add_argument('--name', type=str, required=True, help='experiment name')
 parser.add_argument('--data_dir', default='datasets/flowers', type=str, help='data path')
 parser.add_argument('--num_labels_percent', type=int, default=0.03, help='percent of labeled data')
 
-parser.add_argument('--num_epochs', default=10, type=int, help='number of epochs to run')
+parser.add_argument('--num_epochs', default=25, type=int, help='number of epochs to run')
 
 parser.add_argument('--warmup_epoch_num', default=5, type=int, help='warmup steps')
 

@@ -67,7 +67,27 @@ def show_graphs(args, hist):
     fig.savefig(os.path.join(args.results_dir, "graphs.png"), dpi=300, transparent=False, bbox_inches='tight')
 
 
+def show_graphs_switcher(args, hist):
+    x = np.arange(1, args.num_epochs + 1)
+    fig = plt.figure(figsize=(20, 10))
 
+    ax = fig.add_subplot(1, 2, 1)
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Loss')
+    ax.set_title('Train Loss')
+    ax.plot(x, hist['1_train_loss'], x, hist['2_train_loss'])
+    ax.legend(["Model 1 train loss", "Model 2 train loss"])
+
+    ax = fig.add_subplot(1, 2, 2)
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Acc')
+    ax.set_title('Validation accuracy')
+    ax.plot(x, hist['1_val_acc'], x, hist['2_val_acc'])
+    ax.legend(["Model 1 val acc", "Model 2 val acc"])
+
+    fig.tight_layout()
+    plt.show()
+    fig.savefig(os.path.join(args.results_dir, "graphs.png"), dpi=300, transparent=False, bbox_inches='tight')
 
 def show_confusionMat(args , model, dataloader,s_or_t):
     test_accuracy, confusion_matrix = calculate_accuracy(args, model, dataloader)

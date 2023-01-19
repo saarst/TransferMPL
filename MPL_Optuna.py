@@ -12,7 +12,7 @@ def objective(trial, args, criterion, dataloaders, dataset_sizes, aug):
     weight_decay = trial.suggest_float("weight_decay", 0, 0.1)
 
     t_optimizer = optim.AdamW(params=t_params_to_update, weight_decay=weight_decay)
-    s_optimizer = optim.AdamW(params=t_params_to_update, weight_decay=weight_decay)
+    s_optimizer = optim.AdamW(params=s_params_to_update, weight_decay=weight_decay)
 
     steps_per_epoch = ceil(dataset_sizes['labeled'] / args.batch_size)
     max_steps = steps_per_epoch * args.num_epochs

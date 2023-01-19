@@ -19,6 +19,7 @@ if debug:
 args = parser.parse_args()
 args = add_args(args)
 
+
 dataloaders, dataset_sizes = get_loaders(args)
 aug = get_aug()
 if args.show_images:
@@ -26,52 +27,49 @@ if args.show_images:
 
 print(device)
 
-# Initialize the model for this run
-t_model, input_size = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
-s_model, _ = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
-
-
-if args.print_model:
-    # Print the model we just instantiated
-    print(t_model)   # student has same model
-
-t_model = t_model.to(device)
-s_model = s_model.to(device)
-
-if args.load_best:
-    print('==> Loading best model ...')
-    subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
-    state = torch.load(os.path.join(subdir, 'best_student.pth'), map_location=device)
-    s_model.load_state_dict(state['student'])
-    t_model.load_state_dict(state['teacher'])
-
-# Gather the parameters to be optimized/updated in this run. If we are
-#  fine-tuning we will be updating all parameters. However, if we are
-#  doing feature extract method, we will only update the parameters
-#  that we have just initialized, i.e. the parameters with requires_grad
-#  is True.
-t_params_to_update = extract_params_to_learn(t_model)
-s_params_to_update = extract_params_to_learn(s_model)
-
 # Set up the loss fn
 criterion = nn.CrossEntropyLoss()
 
-if args.optuna_mode:
-    run_optuna(args, t_model, s_model, criterion, dataloaders, dataset_sizes, aug)
 
+if args.optuna_mode:
+    run_optuna(args, criterion, dataloaders, dataset_sizes, aug)
 else:
-# Observe that all parameters are being optimized
-# t_optimizer = torch.optim.SGD(t_params_to_update, lr=0.001, momentum=0.9)
-# s_optimizer = torch.optim.SGD(s_params_to_update, lr=0.001, momentum=0.9)
+
+    # Initialize the model for this run
+    t_model, input_size = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
+    s_model, _ = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
+
+    if args.print_model:
+        # Print the model we just instantiated
+        print(t_model)   # student has same model
+
+    t_model = t_model.to(device)
+    s_model = s_model.to(device)
+
+    if args.load_best:
+        print('==> Loading best model ...')
+        subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
+        state = torch.load(os.path.join(subdir, 'best_student.pth'), map_location=device)
+        s_model.load_state_dict(state['student'])
+        t_model.load_state_dict(state['teacher'])
+
+    # Gather the parameters to be optimized/updated in this run. If we are
+    #  fine-tuning we will be updating all parameters. However, if we are
+    #  doing feature extract method, we will only update the parameters
+    #  that we have just initialized, i.e. the parameters with requires_grad
+    #  is True.
+    t_params_to_update = extract_params_to_learn(t_model)
+    s_params_to_update = extract_params_to_learn(s_model)
+
+    # Observe that all parameters are being optimized
+    # t_optimizer = torch.optim.SGD(t_params_to_update, lr=0.001, momentum=0.9)
+    # s_optimizer = torch.optim.SGD(s_params_to_update, lr=0.001, momentum=0.9)
 
     t_optimizer = torch.optim.RAdam(t_params_to_update)
     s_optimizer = torch.optim.RAdam(s_params_to_update)
 
     t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.01, steps_per_epoch=round(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
     s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.01, steps_per_epoch=round(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
-
-
-
 
     # Train and evaluate
     #t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)
@@ -89,7 +87,6 @@ else:
         show_confusionMat(args, [s_model], dataloaders['test'], "Student")
         show_confusionMat(args, [t_model], dataloaders['test'], "Teacher")
         show_confusionMat(args, [t_model, s_model], dataloaders['test'], "Teacher and Student")
-
 
     with open(os.path.join(args.results_dir, 'commandline_args.txt'), 'w') as f:
         json.dump(args.__dict__, f, indent=2)

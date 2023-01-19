@@ -1,8 +1,11 @@
 from MPL_utils import *
 import torch.optim as optim
 
-def objective(trial, args, t_model,s_model,criterion,dataloaders, dataset_sizes,aug):
-
+def objective(trial, args,criterion,dataloaders, dataset_sizes, aug):
+    t_model, input_size = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
+    s_model, _ = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
+    t_model = t_model.to(device)
+    s_model = s_model.to(device)
     t_params_to_update = extract_params_to_learn(t_model)
     s_params_to_update = extract_params_to_learn(s_model)
 

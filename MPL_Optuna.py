@@ -31,9 +31,9 @@ def objective(trial, args, t_model,s_model,criterion,dataloaders, dataset_sizes,
     # Train and evaluate
     s_model, t_model, hist = train_model(trial, args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler,
                                          s_optimizer, s_scheduler, aug)
-
-    with open(os.path.join(args.results_dir, 'optuna.txt'), 'w') as f:
-        json.dump(trial.study.best_trial.params, f, indent=2)
+    if len(trial.study.best_trials) > 0:
+        with open(os.path.join(args.results_dir, 'optuna.txt'), 'w') as f:
+            json.dump(trial.study.best_trial.params, f, indent=2)
 
     return hist['s_val_acc'][-1]
 

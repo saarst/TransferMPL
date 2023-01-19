@@ -36,7 +36,7 @@ parser.add_argument('--n_trials', default=10000, type=int, help='n_trials for op
 parser.add_argument('--timeout', default=10800, type=int, help='timeout [sec] for optuna')
 
 def add_args(args):
-    args.batch_size = 2 if args.data_dir == 'datasets/hymenoptera_data' else 128
+    args.batch_size = 2 if args.data_dir == 'datasets/hymenoptera_data' else 64
     args.num_workers = 2 if torch.cuda.is_available() else 0
     args.pin_memory = True if torch.cuda.is_available() else False
     args.val_size_percentage = 0.008

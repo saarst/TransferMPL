@@ -5,7 +5,7 @@ from MPL_utils import *
 
 def get_loaders(args):
     basic_transform = transforms.Compose([
-        transforms.RandomCrop(224,pad_if_needed=True),
+        transforms.RandomCrop(224, pad_if_needed=True),
         transforms.ToTensor()])
 
     dataset = ImageFolder(args.data_dir, basic_transform)

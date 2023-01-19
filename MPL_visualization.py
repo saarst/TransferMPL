@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from MPL_utils import *
 
 def convert_to_imshow_format(image):
@@ -62,6 +64,9 @@ def show_graphs(args, hist):
 
     fig.tight_layout()
     plt.show()
+    fig.savefig(os.path.join(args.results_dir, "graphs.png"), dpi=300, transparent=False, bbox_inches='tight')
+
+
 
 
 def show_confusionMat(args , model, dataloader,s_or_t):
@@ -69,7 +74,10 @@ def show_confusionMat(args , model, dataloader,s_or_t):
     print(s_or_t + " test accuracy: {:.3f}%".format(test_accuracy))
     df_cm = pd.DataFrame(confusion_matrix, args.class_names, args.class_names)
     # plot confusion matrix
-    plt.figure(figsize = (20,14))
-    sn.heatmap(df_cm, annot=True)
+
+    fig = plt.figure(figsize=(20, 14))
+    ax = sn.heatmap(df_cm, annot=True, linewidth=.5, fmt=".1f")
+    ax.set_title(s_or_t + ' Confusion Matrix')
+    fig.savefig(os.path.join(args.results_dir, s_or_t + "_CM.png"), dpi=300, transparent=False, bbox_inches='tight')
     plt.show()
     

@@ -17,7 +17,7 @@ def objective(trial, args, criterion, dataloaders, dataset_sizes, aug):
     t_optimizer = optim.AdamW(params=t_params_to_update, lr=min_lr, betas=(beta1,beta2), weight_decay=weight_decay)
     s_optimizer = optim.AdamW(params=t_params_to_update, lr=min_lr, betas=(beta1,beta2), weight_decay=weight_decay)
 
-    steps_per_epoch = floor(dataset_sizes['labeled'] / args.batch_size)
+    steps_per_epoch = ceil(dataset_sizes['labeled'] / args.batch_size)
     max_steps = steps_per_epoch * args.num_epochs
     max_lr = trial.suggest_float("max_lr", 1e-4, 1e-1, log=True)  # log=True, will use log scale to interplolate between lr
     t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=max_lr,

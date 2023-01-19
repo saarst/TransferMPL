@@ -9,13 +9,12 @@ from MPL_args import *
 
 # args:
 
-debug = False  # disable during debug
+debug = True  # disable during debug
 if debug:
     sys.argv = sys.argv + ['--name', 'debug',
                            '--num_epochs', '1',
                            '--model_name', 'vgg',
-                           '--switch_mode',
-                           '--optuna_mode']
+                           '--switch_mode']
 args = parser.parse_args()
 args = add_args(args)
 
@@ -68,8 +67,8 @@ else:
     t_optimizer = torch.optim.RAdam(t_params_to_update)
     s_optimizer = torch.optim.RAdam(s_params_to_update)
 
-    t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.01, steps_per_epoch=floor(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
-    s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.01, steps_per_epoch=floor(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
+    t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.01, steps_per_epoch=ceil(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
+    s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.01, steps_per_epoch=ceil(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
 
     # Train and evaluate
     #t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)

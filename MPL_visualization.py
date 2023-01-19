@@ -66,6 +66,28 @@ def show_graphs(args, hist):
     plt.show()
     fig.savefig(os.path.join(args.results_dir, "graphs.png"), dpi=300, transparent=False, bbox_inches='tight')
 
+def show_graph_1_model(args, hist):
+    x = np.arange(1, args.num_epochs + 1)
+    fig = plt.figure(figsize=(20, 10))
+
+    ax = fig.add_subplot(1, 2, 1)
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Loss')
+    ax.set_title('Train Loss')
+    ax.plot(x, hist['s_train_loss'])
+    ax.legend(["Student train loss"])
+
+    ax = fig.add_subplot(1, 2, 2)
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Acc')
+    ax.set_title('Validation accuracy')
+    ax.plot(x, hist['s_val_acc'])
+    ax.legend(["Student val acc"])
+
+    fig.tight_layout()
+    plt.show()
+    fig.savefig(os.path.join(args.results_dir, "graphs.png"), dpi=300, transparent=False, bbox_inches='tight')
+
 
 def show_graphs_switcher(args, hist):
     x = np.arange(1, args.num_epochs + 1)

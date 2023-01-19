@@ -47,7 +47,7 @@ else:
 
     if args.load_best:
         print('==> Loading best model ...')
-        subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
+        subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1], args.name)
         state = torch.load(os.path.join(subdir, 'best_student.pth'), map_location=device)
         s_model.load_state_dict(state['student'])
         t_model.load_state_dict(state['teacher'])
@@ -64,11 +64,12 @@ else:
     # t_optimizer = torch.optim.SGD(t_params_to_update, lr=0.001, momentum=0.9)
     # s_optimizer = torch.optim.SGD(s_params_to_update, lr=0.001, momentum=0.9)
 
-    t_optimizer = torch.optim.RAdam(t_params_to_update)
-    s_optimizer = torch.optim.RAdam(s_params_to_update)
+    t_optimizer = torch.optim.AdamW(t_params_to_update, weight_decay=0.097)
+    s_optimizer = torch.optim.AdamW(s_params_to_update, weight_decay=0.097)
 
-    t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.01, steps_per_epoch=ceil(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
-    s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.01, steps_per_epoch=ceil(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
+    t_scheduler = torch.optim.lr_scheduler.OneCycleLR(t_optimizer, max_lr=0.00263, steps_per_epoch=ceil(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
+    s_scheduler = torch.optim.lr_scheduler.OneCycleLR(s_optimizer, max_lr=0.00263, steps_per_epoch=ceil(dataset_sizes['labeled'] / args.batch_size), epochs=args.num_epochs)
+
 
     # Train and evaluate
     #t_model, hist = train_model_labeled_ref(t_model, dataloaders, criterion, t_optimizer, num_epochs=args.num_epochs)
@@ -79,6 +80,10 @@ else:
         show_confusionMat(args, [model_2], dataloaders['test'], "Model 2")
         show_confusionMat(args, [model_1], dataloaders['test'], "Model 1")
         show_confusionMat(args, [model_1, model_2], dataloaders['test'], "Both models")
+    elif args.fintune_mode:
+        s_model, hist = train_model_labeled(args, s_model, dataloaders, criterion, s_optimizer, s_scheduler, aug)
+        show_graph_1_model(args, hist)
+        show_confusionMat(args, [s_model], dataloaders['test'], "Student")
     else:
         s_model, t_model, hist = train_model(None, args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler,
                                              s_optimizer, s_scheduler, aug)

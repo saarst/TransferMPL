@@ -155,65 +155,88 @@ def extract_params_to_learn(model_ft):
 Training function
 """
 
-
-def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs=25):
+def train_model_labeled(args, model, dataloaders, criterion, optimizer, scheduler, aug):
     since = time.time()
+    scaler = torch.cuda.amp.GradScaler()
+    aug_weak = aug['aug_weak']
 
-    s_val_acc_history = []
+    train_loss_history = []
+    val_acc_history = []
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
-    for epoch in range(num_epochs):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+    for epoch in range(args.finetune_epochs):
+        print('Epoch {}/{}'.format(epoch, args.finetune_epochs - 1))
         print('-' * 10)
+        # train:
+        start_of_train = time.time()
+        model.train()  # Set model to training mode
+        running_loss = 0.0
 
-        # Each epoch has a training and validation phase
-        for phase in ['labeled', 'val']:
-            if phase == 'labeled':
-                model.train()  # Set model to training mode
-            else:
-                model.eval()  # Set model to evaluate mode
+        # Iterate over data:
+        for inputs_l, labels in dataloaders['labeled']:
 
-            running_loss = 0.0
-            running_corrects = 0
+            inputs_l = inputs_l.to(device)
+            inputs_l = aug_weak(inputs_l)
+            labels = labels.to(device)
 
-            # Iterate over data.
-            for inputs, labels in dataloaders[phase]:
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+            # teacher: calc t_loss_labels(supervised) and t_loss_uda(unsupervised)
+            # forward:
+            batch_size = inputs_l.shape[0]
+            logits_l = model(inputs_l)
+            # Loss:
+            loss = criterion(logits_l, labels.long())  # supervised
 
-                # forward
-                # track history if only in train
-                with torch.set_grad_enabled(phase == 'labeled'):
-                    # Get model outputs and calculate loss
-                    outputs = model(inputs)
-                    loss = criterion(outputs, labels)
+            # teacher Backward:
+            optimizer.zero_grad()
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+            scheduler.step()
 
-                    _, preds = torch.max(outputs, 1)
+            # statistics
+            running_loss += loss.item() * inputs_l.size(0)
 
-                    # backward + optimize only if in training phase
-                    if phase == 'labeled':
-                        # zero the parameter gradients
-                        optimizer.zero_grad()
-                        loss.backward()
-                        optimizer.step()
+        train_loss_history.append(running_loss / len(dataloaders['labeled'].dataset))
 
-                # statistics
-                running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels.data)
+        epoch_train_time = time.time() - start_of_train
 
-            epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
+        print('Train: Loss: {:.4f}, Epoch train time: {:.0f}m {:.0f}s'.format(
+            train_loss_history[-1], epoch_train_time // 60, epoch_train_time % 60))
 
-            print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
-            # deep copy the model
-            if phase == 'val' and epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
-            if phase == 'val':
-                val_acc_history.append(epoch_acc)
+        # Validation Phase:
+        start_of_valid = time.time()
+        model.eval()  # Set s_model to evaluate mode
+        running_corrects = 0.0
+        for inputs_l, labels in dataloaders['val']:
+            inputs_l = inputs_l.to(device)
+            labels = labels.to(device)
+
+            outputs = model(inputs_l)
+            _, preds = torch.max(outputs, 1)
+            running_corrects += torch.sum(preds == labels.data)
+
+        val_acc_history.append(running_corrects.double().cpu() / len(dataloaders['val'].dataset))
+
+        epoch_valid_time = time.time() - start_of_valid
+        print('Val: Acc: {:.4f}, Epoch validation time: {:.0f}m {:.0f}s'.format(
+            val_acc_history[-1], epoch_valid_time // 60, epoch_valid_time % 60))
+
+        if val_acc_history[-1] > best_acc:
+            best_s_acc = val_acc_history[-1]
+            best_model_wts = copy.deepcopy(model.state_dict())
+            state = {
+                'model': model.state_dict(),
+                'epoch': epoch,
+                'args': args
+            }
+            subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1], args.name)
+            if not os.path.isdir(subdir):
+                os.makedirs(subdir)
+            print('==> Saving model ...')
+            torch.save(state, os.path.join(subdir, 'best_student.pth'))
 
         print()
 
@@ -224,10 +247,6 @@ def train_model_labeled_ref(model, dataloaders, criterion, optimizer, num_epochs
     # load best model weights
     model.load_state_dict(best_model_wts)
     return model, val_acc_history
-
-
-
-
 
 def x_split(args, labels, size):
     label_per_class = size // args.num_classes

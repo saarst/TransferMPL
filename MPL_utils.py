@@ -15,6 +15,7 @@ import json
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from math import floor
 from torch.utils.data import DataLoader, Dataset, SubsetRandomSampler, Subset, RandomSampler
 from torchvision.datasets import ImageFolder
 from torchvision import models, transforms

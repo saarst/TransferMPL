@@ -462,7 +462,10 @@ def train_model(trial, args, t_model, s_model, dataloaders, criterion, t_optimiz
 
         if args.optuna_mode:
             # report back to Optuna how far it is (epoch-wise) into the trial and how well it is doing (accuracy)
-            trial.report(s_val_acc_history[-1], epoch)
+            if epoch >= args.warmup_epoch_num:
+                trial.report(s_val_acc_history[-1], epoch)
+            else:
+                trial.report(t_val_acc_history[-1], epoch)
             # then, Optuna can decide if the trial should be pruned
             # Handle pruning based on the intermediate value.
             if trial.should_prune():

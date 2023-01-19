@@ -3,8 +3,8 @@ import torch.optim as optim
 
 def objective(trial, args, t_model,s_model,criterion,dataloaders, dataset_sizes,aug):
 
-    t_params_to_update = extract_params_to_learn(t_model, args.feature_extract)
-    s_params_to_update = extract_params_to_learn(s_model, args.feature_extract)
+    t_params_to_update = extract_params_to_learn(t_model)
+    s_params_to_update = extract_params_to_learn(s_model)
 
     optimizer_name = trial.suggest_categorical("optimizer", ["RAdam", "AdamW", "SGD"])
     if optimizer_name == "SGD":

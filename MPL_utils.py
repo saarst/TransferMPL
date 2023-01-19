@@ -38,26 +38,10 @@ plt.rcParams['axes.linewidth'] = 2
 cos = nn.CosineSimilarity()
 
 
-def set_parameter_requires_grad(model, feature_extracting=False):
-    # approach 1
-    if feature_extracting:
-        # frozen model
-        model.requires_grad_(False)
-    else:
-        # fine-tuning
-        model.requires_grad_(True)
+def set_parameter_requires_grad(model):
+    model.requires_grad_(False)
 
-    # approach 2
-    if feature_extracting:
-        # frozen model
-        for param in model.parameters():
-            param.requires_grad = False
-    else:
-        # fine-tuning
-        for param in model.parameters():
-            param.requires_grad = True
-    # note: you can also mix between frozen layers and trainable layers, but you'll need a custom
-    # function that loops over the model's layers and you specify which layers are frozen.
+
 
 
 def imshow(inp, title=None):
@@ -75,7 +59,7 @@ def imshow(inp, title=None):
     ax.set_axis_off()
 
 
-def initialize_model(model_name, num_classes, feature_extract, use_pretrained=True):
+def initialize_model(model_name, num_classes, use_pretrained=True):
     # Initialize these variables which will be set in this if statement. Each of these
     #   variables is model specific.
     model_ft = None
@@ -92,7 +76,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         # old method for toechvision < 0.13
         # model_ft = models.resnet18(pretrained=use_pretrained)
 
-        set_parameter_requires_grad(model_ft, feature_extract)
+        set_parameter_requires_grad(model_ft)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)  # replace the last FC layer
         input_size = 224
@@ -105,7 +89,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         # old method for toechvision < 0.13
         # model_ft = models.alexnet(pretrained=use_pretrained)
 
-        set_parameter_requires_grad(model_ft, feature_extract)
+        set_parameter_requires_grad(model_ft)
         num_ftrs = model_ft.classifier[6].in_features
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
@@ -118,7 +102,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         # old method for toechvision < 0.13
         # model_ft = models.vgg16(pretrained=use_pretrained)
 
-        set_parameter_requires_grad(model_ft, feature_extract)
+        set_parameter_requires_grad(model_ft)
         num_ftrs = model_ft.classifier[6].in_features
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
@@ -131,7 +115,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         # old method for toechvision < 0.13
         # model_ft = models.squeezenet1_0(pretrained=use_pretrained)
 
-        set_parameter_requires_grad(model_ft, feature_extract)
+        set_parameter_requires_grad(model_ft)
         model_ft.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
         model_ft.num_classes = num_classes
         input_size = 224
@@ -144,7 +128,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         # old method for toechvision < 0.13
         # model_ft = models.densenet121(pretrained=use_pretrained)
 
-        set_parameter_requires_grad(model_ft, feature_extract)
+        set_parameter_requires_grad(model_ft)
         num_ftrs = model_ft.classifier.in_features
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
         input_size = 224
@@ -155,19 +139,14 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
     return model_ft, input_size
 
 
-def extract_params_to_learn(model_ft, feature_extract):
+def extract_params_to_learn(model_ft):
     params_to_update = model_ft.parameters()
     # print("Params to learn:")
-    if feature_extract:
-        params_to_update = []
-        for name, param in model_ft.named_parameters():
-            if param.requires_grad == True:
-                params_to_update.append(param)
-                # print("\t", name)
-    else:
-        for name, param in model_ft.named_parameters():
-            if param.requires_grad == True:
-                # print("\t", name)
+    params_to_update = []
+    for name, param in model_ft.named_parameters():
+        if param.requires_grad == True:
+            # print("\t", name)
+            params_to_update.append(param)
     return params_to_update
 
 

@@ -26,8 +26,8 @@ if args.show_images:
 print(device)
 
 # Initialize the model for this run
-t_model, input_size = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
-s_model, _ = initialize_model(args.model_name, args.num_classes, args.feature_extract, use_pretrained=True)
+t_model, input_size = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
+s_model, _ = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
 
 
 if args.print_model:
@@ -49,8 +49,8 @@ if args.load_best:
 #  doing feature extract method, we will only update the parameters
 #  that we have just initialized, i.e. the parameters with requires_grad
 #  is True.
-t_params_to_update = extract_params_to_learn(t_model, args.feature_extract)
-s_params_to_update = extract_params_to_learn(s_model, args.feature_extract)
+t_params_to_update = extract_params_to_learn(t_model)
+s_params_to_update = extract_params_to_learn(s_model)
 
 # Set up the loss fn
 criterion = nn.CrossEntropyLoss()

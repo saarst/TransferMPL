@@ -43,7 +43,6 @@ def add_args(args):
     args.test_size_percentage = 0.06
     if torch.cuda.is_available():
         torch.backends.cudnn.benchmark = True
-    args.feature_extract = True  # Flag for feature extracting. When False, we fine-tune the whole model,  when True we only update the reshaped layer params
     args.datetime = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S");
     args.results_dir = os.path.join('.', 'results', args.name + "_" + args.datetime)
     if not os.path.isdir(args.results_dir):

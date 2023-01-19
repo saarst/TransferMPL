@@ -1,7 +1,7 @@
 from MPL_utils import *
 import torch.optim as optim
 
-def objective(trial, args,criterion,dataloaders, dataset_sizes, aug):
+def objective(trial, args, criterion, dataloaders, dataset_sizes, aug):
     t_model, input_size = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
     s_model, _ = initialize_model(args.model_name, args.num_classes, use_pretrained=True)
     t_model = t_model.to(device)
@@ -32,7 +32,7 @@ def objective(trial, args,criterion,dataloaders, dataset_sizes, aug):
     args.threshold = trial.suggest_float("threshold", 0.65, 0.95, step=0.1)
 
     # Train and evaluate
-    s_model, t_model, hist = train_model(trial, args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler,
+    _, _, hist = train_model(trial, args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler,
                                          s_optimizer, s_scheduler, aug)
     if len(trial.study.best_trials) > 0:
         with open(os.path.join(args.results_dir, 'optuna.txt'), 'w') as f:
@@ -40,11 +40,11 @@ def objective(trial, args,criterion,dataloaders, dataset_sizes, aug):
 
     return hist['s_val_acc'][-1]
 
-def run_optuna(args, t_model, s_model, criterion, dataloaders, dataset_sizes, aug):
+def run_optuna(args, criterion, dataloaders, dataset_sizes, aug):
     # now we can run the experiment
     print("Starting Optuna:")
     sampler = optuna.samplers.TPESampler()
-    func = lambda trial: objective(trial, args, t_model,s_model,criterion,dataloaders, dataset_sizes, aug)
+    func = lambda trial: objective(trial, args,criterion,dataloaders, dataset_sizes, aug)
     study = optuna.create_study(study_name="MPL_Optuna", direction="maximize", sampler=sampler)
     study.optimize(func, args.n_trials, args.timeout)
 

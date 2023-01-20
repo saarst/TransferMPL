@@ -257,7 +257,7 @@ def train_model(trial, args, t_model, s_model, dataloaders, criterion, t_optimiz
                     'epoch': epoch,
                     'args': args
                 }
-                subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
+                subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1], args.name)
                 if not os.path.isdir(subdir):
                     os.makedirs(subdir)
                 print('==> Saving model ...')
@@ -468,7 +468,7 @@ def train_model_switch(trial, args, model_1, model_2, dataloaders, criterion, op
                 'epoch': epoch,
                 'args': args
             }
-            subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1])
+            subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1], args.name)
             if not os.path.isdir(subdir):
                 os.makedirs(subdir)
             torch.save(state, os.path.join(subdir, 'best_switcher.pth'))

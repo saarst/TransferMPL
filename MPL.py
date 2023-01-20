@@ -6,6 +6,7 @@ from data import *
 from visualization import *
 from optuna import *
 from args import *
+from train import *
 
 # args:
 
@@ -48,7 +49,7 @@ else:
 
     if args.load_best:
         print('==> Loading best model ...')
-        subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1], args.name)
+        subdir = os.path.join('.', 'checkpoints', args.data_dir.split("/")[1], args.load_path)
         state = torch.load(os.path.join(subdir, 'best_student.pth'), map_location=device)
         s_model.load_state_dict(state['student'])
         t_model.load_state_dict(state['teacher'])
@@ -85,6 +86,8 @@ else:
         s_model, hist = train_model_labeled(args, s_model, dataloaders, criterion, s_optimizer, s_scheduler, aug)
         show_graph_1_model(args, hist)
         show_confusionMat(args, [s_model], dataloaders['test'], "Student")
+        if args.load_best:
+            show_confusionMat(args, [t_model, s_model], dataloaders['test'], "Teacher and Student")
     else:
         s_model, t_model, hist = train_model(None, args, t_model, s_model, dataloaders, criterion, t_optimizer, t_scheduler,
                                              s_optimizer, s_scheduler, aug)

@@ -3,6 +3,8 @@ from utils import *
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', type=str, required=True, help='experiment name')
 parser.add_argument('--data_dir', default='datasets/flowers', type=str, help='data path')
+parser.add_argument('--load_path', default='', type=str, help='load path')
+
 parser.add_argument('--num_labels_percent', type=int, default=0.03, help='percent of labeled data')
 
 parser.add_argument('--num_epochs', default=100, type=int, help='number of epochs to run')

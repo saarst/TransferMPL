@@ -39,7 +39,7 @@ We also wanted to examine:
 ## Results
 on [flowers dataset](https://www.kaggle.com/datasets/846e29ea90553aba96640836491fe6099a5ec3b31bbfd7c72dce4ca070dcffa9) with 3% labels, using RolePlaying:
 
-<img src="https://github.com/saarst/TransferMPL/blob/saarst-patch-1/results/switch_2023-01-20%2009-36-21/Both%20models_CM.png" data-canonical-src="https://github.com/saarst/TransferMPL/blob/saarst-patch-1/results/switch_2023-01-20%2009-36-21/Both%20models_CM.png" width="750" height="550" />
+<img src="https://github.com/saarst/TransferMPL/blob/main/results/switch_2023-01-20%2009-36-21/Both%20models_CM.png" data-canonical-src="https://github.com/saarst/TransferMPL/blob/main/results/switch_2023-01-20%2009-36-21/Both%20models_CM.png" width="750" height="550" />
 
 ## Installation
 

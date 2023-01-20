@@ -74,6 +74,7 @@ You should use the `MPL.py` file with the following arguments:
 | -h, --help            show this help message and exit
 |  --name |           experiment name
 |  --data_dir |   data path (must start with /datasets , for e.g. /datasets/flowers)
+|  --load_path |  folder in /checkpoints/ folder to load "best_student" from 
 |  --num_labels_percent  | percent of labeled data
 |  --num_epochs | number of epochs to run
 |  --warmup_epoch_num | warmup steps

@@ -1,5 +1,5 @@
-from MPL_utils import *
-from MPL_models import *
+from utils import *
+from models import *
 import torch.optim as optim
 
 

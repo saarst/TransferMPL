@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from MPL_utils import *
+from utils import *
 
 
 def x_split_separate(args, labels, size, labels_indexes=None, separate=True):

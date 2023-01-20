@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
 import torch.optim
 
-from MPL_utils import *
-from MPL_Data import *
-from MPL_visualization import *
-from MPL_Optuna import *
-from MPL_args import *
+from utils import *
+from data import *
+from visualization import *
+from optuna import *
+from args import *
 
 # args:
 

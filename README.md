@@ -27,6 +27,7 @@ The idea of this algorithm is to train a teacher model using "supervised loss" (
 
 
 ![alt text](https://github.com/saarst/TransferMPL/blob/main/assets/MPL.png)
+
 figure taken from original paper
 
 this design is asymetric, so we introduce Role-Playing, basically switch positions between the student and the teacher in the training phase, and eventually using ensemble learning to use both models.

@@ -183,7 +183,6 @@ def train_model_labeled(args, model, dataloaders, criterion, optimizer, schedule
 
             # teacher: calc t_loss_labels(supervised) and t_loss_uda(unsupervised)
             # forward:
-            batch_size = inputs_l.shape[0]
             logits_l = model(inputs_l)
             # Loss:
             loss = criterion(logits_l, labels.long())  # supervised
@@ -715,7 +714,7 @@ def train_model_switch(trial, args, model_1, model_2, dataloaders, criterion, op
 
         if val_acc_history_1[-1] > best_1_acc:
             best_1_acc = val_acc_history_1[-1]
-            best_t_model_wts = copy.deepcopy(models_dict["1"].state_dict())
+            best_1_model_wts = copy.deepcopy(models_dict["1"].state_dict())
 
         if args.optuna_mode:
             # report back to Optuna how far it is (epoch-wise) into the trial and how well it is doing (accuracy)
@@ -743,7 +742,7 @@ def train_model_switch(trial, args, model_1, model_2, dataloaders, criterion, op
     print('Best 2_val Acc: {:4f}'.format(best_2_acc))
 
     # load best model weights
-    models_dict["2"].load_state_dict(best_1_model_wts)
-    models_dict["1"].load_state_dict(best_2_model_wts)
+    models_dict["1"].load_state_dict(best_1_model_wts)
+    models_dict["2"].load_state_dict(best_2_model_wts)
     return models_dict["2"], models_dict["1"], {"2_val_acc": val_acc_history_2, "1_val_acc": val_acc_history_1,
                               "2_train_loss": train_loss_history_2, "1_train_loss": train_loss_history_1}

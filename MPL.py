@@ -9,7 +9,7 @@ from MPL_args import *
 
 # args:
 
-debug = True  # disable during debug
+debug = False  # disable during debug
 if debug:
     sys.argv = sys.argv + ['--name', 'debug',
                            '--num_epochs', '1',

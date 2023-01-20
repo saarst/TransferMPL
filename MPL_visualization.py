@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 
 from MPL_utils import *
-
 def convert_to_imshow_format(image):
     # first convert back to [0,1] range from [-1,1] range - approximately...
     norm = transforms.Normalize(invMean, invVar)

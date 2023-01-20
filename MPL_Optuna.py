@@ -1,5 +1,7 @@
 from MPL_utils import *
+from MPL_models import *
 import torch.optim as optim
+
 
 def objective(trial, args, criterion, dataloaders, dataset_sizes, aug):
     t_model, input_size = initialize_model(args.model_name, args.num_classes, use_pretrained=True)

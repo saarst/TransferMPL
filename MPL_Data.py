@@ -3,6 +3,50 @@ import matplotlib.pyplot as plt
 from MPL_utils import *
 
 
+def x_split_separate(args, labels, size, labels_indexes=None, separate=True):
+    if labels_indexes is None:
+        labels_indexes = np.array(range(len(labels)))
+    label_per_class = size // args.num_classes
+    labels = np.array(labels)
+    test_idx = []
+    train_idx = []
+    for i in range(args.num_classes):
+        idx = np.where(labels == i)[0]
+        np.random.shuffle(idx)
+        test_idx.extend(idx[:label_per_class])
+        train_idx.extend(idx[label_per_class:])
+    test_idx = np.array(test_idx)
+    train_idx = np.array(train_idx)
+    assert len(test_idx) == label_per_class * args.num_classes
+    np.random.shuffle(test_idx)
+    np.random.shuffle(train_idx)
+    if separate:
+        return labels_indexes[test_idx], labels_indexes[train_idx]
+    else:
+        return labels_indexes[test_idx], labels_indexes
+
+
+def check_idx(train_idx, val_idx, test_idx, total_len):
+    train_idx = train_idx.tolist()
+    val_idx = val_idx.tolist()
+    test_idx = test_idx.tolist()
+    all_idx = np.array(range(total_len)).tolist()
+
+    sets = [set(train_idx), set(val_idx), set(test_idx), set(all_idx)]
+    empty_set = set()
+    a = sets[0] & sets[1]
+    b = sets[0] & sets[2]
+    c = sets[1] & sets[2]
+
+    d = sets[0] | sets[1] | sets[2]
+
+    assert(a == empty_set)
+    assert(b == empty_set)
+    assert(c == empty_set)
+    assert(d == sets[3])
+    return
+
+
 def get_loaders(args):
     basic_transform = transforms.Compose([
         transforms.RandomCrop(224, pad_if_needed=True),

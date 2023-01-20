@@ -9,12 +9,13 @@ from MPL_args import *
 
 # args:
 
-debug = False  # disable during debug
+debug = True  # disable during debug
 if debug:
     sys.argv = sys.argv + ['--name', 'debug',
-                           '--num_epochs', '25',
+                           '--num_epochs', '1',
                            '--model_name', 'vgg',
-                           '--optuna_mode']
+                           '--data_dir', 'datasets/hymenoptera_data',
+                           '--finetune_mode']
 args = parser.parse_args()
 args = add_args(args)
 
@@ -80,7 +81,7 @@ else:
         show_confusionMat(args, [model_2], dataloaders['test'], "Model 2")
         show_confusionMat(args, [model_1], dataloaders['test'], "Model 1")
         show_confusionMat(args, [model_1, model_2], dataloaders['test'], "Both models")
-    elif args.fintune_mode:
+    elif args.finetune_mode:
         s_model, hist = train_model_labeled(args, s_model, dataloaders, criterion, s_optimizer, s_scheduler, aug)
         show_graph_1_model(args, hist)
         show_confusionMat(args, [s_model], dataloaders['test'], "Student")

@@ -166,8 +166,8 @@ def train_model_labeled(args, model, dataloaders, criterion, optimizer, schedule
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
-    for epoch in range(args.finetune_epochs):
-        print('Epoch {}/{}'.format(epoch, args.finetune_epochs - 1))
+    for epoch in range(args.num_epochs):
+        print('Epoch {}/{}'.format(epoch, args.num_epochs - 1))
         print('-' * 10)
         # train:
         start_of_train = time.time()
@@ -246,7 +246,7 @@ def train_model_labeled(args, model, dataloaders, criterion, optimizer, schedule
 
     # load best model weights
     model.load_state_dict(best_model_wts)
-    return model, val_acc_history
+    return model, {"s_val_acc": val_acc_history, "s_train_loss": train_loss_history}
 
 def x_split(args, labels, size):
     label_per_class = size // args.num_classes

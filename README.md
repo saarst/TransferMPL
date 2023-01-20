@@ -1,9 +1,16 @@
-# TransferMPL-Roleplaying
-implementation of Meta Pseudo Labels with "Role-Playing" and Transfer Learning.
+<h2 align="center">TransferMPL-Roleplaying</h2> 
+<h2 align="center">Final project for the Technion's EE Deep Learning course (046211)</h2> 
+<h4 align="center">implementation of Meta Pseudo Labels with "Role-Playing" and Transfer Learning.</h4> 
+
+
+  <p align="center">
+    Shira Lifshitz: <a href="https://www.linkedin.com/in/shira-lifshitz-313328248/">LinkedIn</a> , <a href="https://github.com/ShiraLifshitz">GitHub</a>
+  <br>
+    Saar Stern: <a href="https://www.linkedin.com/in/saar-stern-a43413246/">LinkedIn</a> , <a href="https://github.com/saarst">GitHub</a>
+  </p>
 
 Based on paper:
-Hieu Pham, Zihang Dai, Qizhe Xie, Minh-Thang Luong, Quoc V. Le [Meta Pseudo Labels]
-(https://arxiv.org/abs/2003.10580)
+Hieu Pham, Zihang Dai, Qizhe Xie, Minh-Thang Luong, Quoc V. Le [Meta Pseudo Labels](https://arxiv.org/abs/2003.10580)
 
 - [TransferMPL with Roleplaying](#TransferMPL-Roleplaying)
   * [Background](#background)
@@ -11,7 +18,7 @@ Hieu Pham, Zihang Dai, Qizhe Xie, Minh-Thang Luong, Quoc V. Le [Meta Pseudo Labe
   * [Installation](#installation)
   * [Files in the repository](#files-in-the-repository)
   * [API (`MPL.py --help`)](#api-mplpy---help)
-  * [Usage](#training)
+  * [Usage](#usage)
   * [References](#references)
 
 ## Background
@@ -97,5 +104,6 @@ You should use the `MPL.py` file with the following arguments:
 ## References
 
 * [flowers dataset](https://www.kaggle.com/datasets/846e29ea90553aba96640836491fe6099a5ec3b31bbfd7c72dce4ca070dcffa9) 
-Hieu Pham, Zihang Dai, Qizhe Xie, Minh-Thang Luong, Quoc V. Le [Meta Pseudo Labels](https://arxiv.org/abs/2003.10580)
-[https://github.com/sally20921/Meta_Pseudo_Labels](https://github.com/sally20921/Meta_Pseudo_Labels) - pytorch implementation of the original paper
+* Hieu Pham, Zihang Dai, Qizhe Xie, Minh-Thang Luong, Quoc V. Le [Meta Pseudo Labels](https://arxiv.org/abs/2003.10580)
+* [https://github.com/sally20921/Meta_Pseudo_Labels](https://github.com/sally20921/Meta_Pseudo_Labels) - pytorch implementation of the original paper
+* Leslie N. Smith, Nicholay Topin [Super-Convergence: Very Fast Training of Neural Networks Using Large Learning Rates](https://arxiv.org/abs/1708.07120)

@@ -36,7 +36,7 @@ def show_images(args,datalodaer, aug):
         if idx == 5:
             break
         axes[idx].imshow(convert_to_imshow_format(image))
-        axes[idx].set_title(args.class_names[labels[idx]] + "Augmented")
+        axes[idx].set_title(args.class_names[labels[idx]])
         axes[idx].set_xticks([])
         axes[idx].set_yticks([])
     fig.tight_layout()

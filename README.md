@@ -25,7 +25,6 @@ Hieu Pham, Zihang Dai, Qizhe Xie, Minh-Thang Luong, Quoc V. Le [Meta Pseudo Labe
 In semi-supervised setting we are given a dataset with low percent of labels (e.g. 3%) . MPL is an algorithm for such case:
 The idea of this algorithm is to train a teacher model using "supervised loss" (with labels) , "self-supervised loss" (uda, which uses weak and strong augmentations) , and "semi-supervised loss" derived from a student model, that learns from Psuedo Labels (teacher's predictions)
 
-
 ![alt text](https://github.com/saarst/TransferMPL/blob/main/assets/MPL.png)
 
 Figure taken from original paper
@@ -39,6 +38,8 @@ We also wanted to examine:
 
 ## Results
 On [flowers dataset](https://www.kaggle.com/datasets/846e29ea90553aba96640836491fe6099a5ec3b31bbfd7c72dce4ca070dcffa9) with 3% labels, using RolePlaying and Ensemble:
+
+<img src="https://github.com/saarst/TransferMPL/blob/main/assets/flowers.png" data-canonical-src="https://github.com/saarst/TransferMPL/blob/main/assets/flowers.png" width="750" height="150" />
 
 <img src="https://github.com/saarst/TransferMPL/blob/main/results/switch_2023-01-20%2009-36-21/Both%20models_CM.png" data-canonical-src="https://github.com/saarst/TransferMPL/blob/main/results/switch_2023-01-20%2009-36-21/Both%20models_CM.png" width="750" height="550" />
 
